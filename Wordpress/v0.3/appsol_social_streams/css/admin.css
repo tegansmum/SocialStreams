@@ -1,0 +1,22 @@
+.stream-item ul
+{
+    overflow: hidden;
+}
+li.stream-item
+{
+    float: left;
+    margin: 0 0.5em 0.5em 0;
+    overflow: hidden;
+    height: 130px;
+    width: 130px;
+    text-align: center;
+    vertical-align: middle;
+}
+span.stream-item-title
+{
+    display: none;
+}
+span.stream-item-photo
+{
+    
+}

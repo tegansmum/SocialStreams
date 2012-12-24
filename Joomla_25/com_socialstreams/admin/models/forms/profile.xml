@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<form>
+    <fieldset name="details"
+	      addfieldpath="/administrator/components/com_socialstreams/models/fields"
+    >
+	<field name="id" type="text" default="0"
+	       readonly="true" 
+	       class="readonly"
+	       label="JGLOBAL_FIELD_ID_LABEL" 	
+	       description ="JGLOBAL_FIELD_ID_DESC" />
+	       
+	<field name="network" 
+	       type="text" 
+	       label="COM_SOCIALSTREAMS_FIELD_NETWORK_LABEL"
+	       description="COM_SOCIALSTREAMS_FIELD_NETWORK_DESC" 
+	       class="readonly"
+	       readonly="true" />
+	
+	<field name="user"
+	       type="text" 
+	       label="COM_SOCIALSTREAMS_FIELD_USER_LABEL" 
+	       class="readonly"
+	       description="COM_SOCIALSTREAMS_FIELD_USER_DESC" 
+	       readonly="true" />
+
+	<field name="name" 
+	       type="text" 
+	       label="COM_SOCIALSTREAMS_FIELD_NAME_LABEL" 
+	       class="readonly"
+	       description="COM_SOCIALSTREAMS_FIELD_NAME_DESC" 
+	       readonly="true" />
+	       
+	<field name="image" 
+	       type="text" 
+	       label="COM_SOCIALSTREAMS_FIELD_IMAGE_LABEL" 
+	       class="readonly"
+	       description="COM_SOCIALSTREAMS_FIELD_IMAGE_DESC" 
+	       readonly="true" />
+	       
+	<field name="url" 
+	       type="text" 
+	       default="" 
+	       label="COM_SOCIALSTREAMS_FIELD_URL_LABEL" 
+	       class="readonly"
+	       description="COM_SOCIALSTREAMS_FIELD_URL_DESC" 
+	       readonly="true" />
+	       
+	<field name="profile_title"
+	       type="spacer"
+	       label="COM_SOCIALSTREAMS_FIELD_NAME_LABEL" 
+	       description="COM_SOCIALSTREAMS_FIELD_NAME_DESC" />
+	       
+	<field name="profile" 
+	       type="hidden" />
+	       
+    </fieldset>
+
+    <fieldset
+	name="publish"
+	label="COM_SOCIALSTREAMS_GROUP_LABEL_PUBLISHING_DETAILS"
+    >
+		       
+	<field name="created" type="calendar" label="JGLOBAL_FIELD_CREATED_LABEL"
+	       description="JGLOBAL_FIELD_CREATED_DESC" class="readonly" size="22"
+	       format="%Y-%m-%d %H:%M:%S" readonly="true" filter="user_utc" />
+
+	<field name="expires" type="calendar" class="readonly"
+	       label="COM_SOCIALSTREAMS_FIELD_EXPIRES_LABEL" description="COM_SOCIALSTREAMS_FIELD_EXPIRES_DESC"
+	       size="22" readonly="true" format="%Y-%m-%d %H:%M:%S" filter="user_utc" />
+
+	<field name="checked_out" type="hidden" filter="unset" />
+
+	<field name="checked_out_time" type="hidden" filter="unset" />
+
+    </fieldset>
+</form>

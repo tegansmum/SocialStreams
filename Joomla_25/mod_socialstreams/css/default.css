@@ -1,0 +1,165 @@
+/* 
+    Document   : default
+    Created on : 08-Sep-2011, 15:10:41
+    Author     : stuart
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+.module.social-streams { 
+    background-color: #fff;
+}
+.module.social-streams .stream,
+.module.social-streams .social-metrics,
+.module.social-streams .connections {
+    margin: 0 8px 8px;
+    overflow: hidden;
+}
+.module.social-streams .stream {
+    height: 200px;
+    overflow: auto;
+}
+.module.social-streams .stream .stream-item {
+    margin-bottom: 4px;
+    border: 1px solid #c0c0c0;
+    background-color: #fff;
+    padding: 4px;
+    overflow: hidden;
+}
+.module.social-streams .stream .stream-item .profile-image {
+    float: left;
+    margin: 0 4px 4px 0;
+}
+.module.social-streams .stream .stream-item .stream-item-title {
+    display: block;
+    font-weight: bolder;
+}
+.module.social-streams .stream .stream-item .stream-item-video,
+.module.social-streams .stream .stream-item .stream-item-photo,
+.module.social-streams .stream .stream-item .stream-item-link .stream-item-photo-image-link {
+    float: right;
+}
+.module.social-streams .stream .stream-item .stream-item-link .stream-item-photo-caption {
+    display: block;
+}
+.module.social-streams .stream .stream-item .stream-item-link {
+    font-weight: bolder;
+    color: #0080ff; 
+}
+.module.social-streams .stream .stream-item .meta {
+    clear: both;
+    display: block;
+    padding-left: 18px;
+    margin: 2px 0;
+    height: 16px;
+    line-height: 16px;
+    font-size: 0.85em;
+}
+/* Social Media Streams */
+.module.social-streams .stream .facebook .meta {
+    background: url(../images/facebook-16x16.png) 0 50% no-repeat;
+}
+.module.social-streams .stream .twitter .meta {
+    background: url(../images/twitter-16x16.png) 0 50% no-repeat;
+}
+.module.social-streams .stream .linkedin .meta {
+    background: url(../images/linkedin-16x16.png) 0 50% no-repeat;
+}
+.module.social-streams .stream .gplus .meta {
+    background: url('../images/google+-16x16.png') 0 50% no-repeat;
+}
+.module.social-streams .stream .stream-item .meta .profile-name {
+    font-weight: bolder;
+}
+.module.social-streams .stream .stream-item .actions {
+    display: block;
+    margin-left: 18px;
+}
+.module.social-streams .stream .stream-item .actions .action {
+    display: inline-block;
+    margin-right: 4px;
+}
+.module.social-streams .stream .stream-item .actions .action a {
+    padding: 2px 4px;
+    background-color: #ddd;
+    border: 1px solid #c0c0c0;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+.module.social-streams .stream .stream-item .actions .action a:hover {
+    background-color: #eee;
+}
+.module.social-streams .stream .stream-item .actions .action .tally {
+    padding-right: 2px;
+}
+.module.social-streams .stream .stream-item .actions .action .tally .count {
+    font-weight: bolder;
+}
+.module.social-streams .social-metrics .social-metric {
+    display: inline-block;
+    float: left;
+    margin-bottom: 4px;
+    height: 32px;
+    width: 50%;
+}
+.module.social-streams .social-metrics .social-metric .profile-link {
+    display: block;
+    background-color: #eaeaea;
+    border: 1px solid #c0c0c0;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    padding: 2px 2px 2px 30px;
+    margin-right: 4px;
+    height: 26px;
+    line-height: 30px;
+}
+.module.social-streams .social-metrics .facebook .profile-link {
+    background: #eaeaea url(../images/facebook-24x24.png) 4px 50% no-repeat;
+}
+.module.social-streams .social-metrics .twitter .profile-link {
+    background: #eaeaea url(../images/twitter-24x24.png) 4px 50% no-repeat;
+}
+.module.social-streams .social-metrics .linkedin .profile-link {
+    background: #eaeaea url(../images/linkedin-24x24.png) 4px 50% no-repeat;
+}
+.module.social-streams .social-metrics .gplus .profile-link {
+    background: #eaeaea url('../images/google+-24x24.png') 4px 50% no-repeat;
+}
+.module.social-streams .social-metrics .social-metric .profile-link:hover {
+    background-color: #f1f1f1;
+    border-color: #cecece;
+}
+.module.social-streams .connections .connection {
+    display: inline-block;
+    float: left;
+    margin: 0 6px 4px 0;
+    height: 48px;
+    width: 48px;
+}
+.module.social-streams .connections .connection a {
+    position: relative;
+    display: block;
+    height: 100%
+}
+.module.social-streams .connections .connection .social-network-icon {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    height: 16px;
+    width: 16px;
+}
+.module.social-streams .connections .facebook .social-network-icon {
+    background: url(../images/facebook-16x16.png) 0 0 no-repeat;
+}
+.module.social-streams .connections .twitter .social-network-icon {
+    background: url(../images/twitter-16x16.png) 0 0 no-repeat;
+}
+.module.social-streams .connections .linkedin .social-network-icon {
+    background: url(../images/linkedin-16x16.png) 0 0 no-repeat;
+}
+.module.social-streams .connections .gplus .social-network-icon {
+    background: url('../images/google+-16x16.png') 0 0 no-repeat;
+}

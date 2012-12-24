@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<config>
+    <fieldset name="general" label="COM_SOCIALSTREAMS_CONFIG_GENERAL_LABEL" description="COM_SOCIALSTREAMS_CONFIG_GENERAL_DESCRIPTION">
+	<field name="networks" type="hidden" default="facebook,twitter,linkedin,google,instagram,flickr,foursquare" />
+	<field name="stored_connections" type="text" default="20" label="Stored Connections" description="The number of connection profiles from each Social Network to store locally" size="3" />
+	<field name="item_period" type="text" default="3600" label="Item Cache Refresh Time (secs)" description="The number of seconds before the Item Cache will be refreshed. Default is 1 hour" size="6" />
+	<field name="profile_period" type="text" default="86400" label="Profile Cache Refresh Time (secs)" description="The number of seconds before the Profile Cache will be refreshed. Default is 24 hours" size="6" />
+    </fieldset>
+    <fieldset name="facebook_options" label="COM_SOCIALSTREAMS_CONFIG_FACEBOOK_LABEL" description="COM_SOCIALSTREAMS_CONFIG_FACEBOOK_DESCRIPTION">
+	<field name="facebook_nicename" type="hidden" default="Facebook" />
+	<field name="facebook" type="radio" default="0" label="Connect to Facebook" description="Use updates and information from Facebook">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="facebook_appkey" type="text" default="" label="Facebook App Key" description="The App ID or AppKey taken from https://developers.facebook.com/apps" size="20" />
+	<field name="facebook_appsecret" type="text" default="" label="Facebook App Secret" description="The App Secret taken from https://developers.facebook.com/apps" size="20" />
+    </fieldset>
+    <fieldset name="twitter_options" label="COM_SOCIALSTREAMS_CONFIG_TWITTER_LABEL" description="COM_SOCIALSTREAMS_CONFIG_TWITTER_DESCRIPTION">
+	<field name="twitter_nicename" type="hidden" default="Twitter" />
+	<field name="twitter" type="radio" default="0" label="Connect to Twitter" description="Use updates and information from Twitter">
+	    <option value="0">JNO</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="twitter_appkey" type="text" default="" label="Twitter App Key" description="The App Key taken from https://dev.twitter.com/apps" size="20" />
+	<field name="twitter_appsecret" type="text" default="" label="Twitter App Secret" description="The App Secret taken from https://dev.twitter.com/apps" size="20" />
+	<field name="stored_tweets" type="text" default="20" label="Stored Tweets" description="The number of Tweets from Twitter to store locally" size="3" />
+	<field name="only_friends" type="radio" default="0" label="Only Show Twitter Friends" description="Only show followers on Twitter who are followed back">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="show_blocked" type="radio" default="0" label="Show Blocked Followers" description="Show Twitter Followers which have been blocked by the User on Twitter">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="trim_user" type="radio" default="0" label="Trim User" description="Only get each tweet authors ID, rather than the full user object">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="include_retweets" type="radio" default="0" label="Include Re-Tweets" description="Get native re-tweets if they exist">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="exclude_replies" type="radio" default="0" label="Exclude Replies" description="Filter out reply tweets, may reduce the number of tweets shown as filtering occurs after tweets are retrieved">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="include_entities" type="radio" default="1" label="Include Entities" description="Get additional meta data about each tweet such as user mentions, hashtags and urls">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+    </fieldset>
+    <fieldset name="linkedin_options" label="COM_SOCIALSTREAMS_CONFIG_LINKEDIN_LABEL" description="COM_SOCIALSTREAMS_CONFIG_LINKEDIN_DESCRIPTION">
+	<field name="linkedin_nicename" type="hidden" default="Linked In" />
+	<field name="linkedin" type="radio" default="0" label="Connect to LinkedIn" description="Use updates and information from LinkedIn">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="linkedin_appkey" type="text" default="" label="LinkedIn App Key" description="The App ID or AppKey taken from https://www.linkedin.com/secure/developer" size="20" />
+	<field name="linkedin_appsecret" type="text" default="" label="LinkedIn App Secret" description="The App Secret taken from https://www.linkedin.com/secure/developer" size="20" />
+	<field name="linkedin_itemtype_shar" type="checkbox" default="0" label="Show Shares" description="LinkedIn Share updates are generated when a member shares or reshares an item" value="1" />
+	<field name="linkedin_itemtype_stat" type="checkbox" default="1" label="Show Status Updates" description="LinkedIn Status Updates are the result of first degree connections setting their status" value="1" />
+	<field name="linkedin_itemtype_virl" type="checkbox" default="0" label="Show Viral Updates" description="LinkedIn Viral updates include comments and likes" value="1" />
+	<field name="linkedin_itemtype_conn" type="checkbox" default="0" label="Show Connection Updates" description="LinkedIn Connection Updates usually describe when a connection of the current member has made a new connection" value="1" />
+    </fieldset>
+    <fieldset name="google_options" label="COM_SOCIALSTREAMS_CONFIG_GOOGLE_LABEL" description="COM_SOCIALSTREAMS_CONFIG_GOOGLE_DESCRIPTION">
+	<field name="google_nicename" type="hidden" default="Google+" />
+	<field name="google" type="radio" default="0" label="Connect to Google+" description="Use updates and information from Google+">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="google_appkey" type="text" default="" label="Google+ API Key" description="The API Key taken from https://code.google.com/apis/console" size="20" />
+	<field name="google_appsecret" type="text" default="" label="Google+ Client Secret" description="The Client Secret taken from https://code.google.com/apis/console" size="20" />
+	<field name="google_appid" type="text" default="" label="Google+ Client ID" description="The Client ID taken from https://code.google.com/apis/console" size="20" />
+    </fieldset>
+    <fieldset name="instagram_options" label="COM_SOCIALSTREAMS_CONFIG_INSTAGRAM_LABEL" description="COM_SOCIALSTREAMS_CONFIG_INSTAGRAM_DESCRIPTION">
+	<field name="instagram_nicename" type="hidden" default="Instagram" />
+	<field name="instagram" type="radio" default="0" label="Connect to Instagram" description="Use updates and information from Instagram">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="instagram_appkey" type="text" default="" label="Instagram API Key" description="The API Key taken from http://instagram.com/developer/clients/manage/" size="20" />
+	<field name="instagram_appsecret" type="text" default="" label="Instagram Client Secret" description="The Client Secret taken from http://instagram.com/developer/clients/manage/" size="20" />
+    </fieldset>
+    <fieldset name="flickr_options" label="COM_SOCIALSTREAMS_CONFIG_FLICKR_LABEL" description="COM_SOCIALSTREAMS_CONFIG_FLICKR_DESCRIPTION">
+	<field name="flickr_nicename" type="hidden" default="Flickr" />
+	<field name="flickr" type="radio" default="0" label="Connect to Flickr" description="Use updates and information from Flickr">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="flickr_appkey" type="text" default="" label="Flickr API Key" description="The API Key taken from http://www.flickr.com/services/" size="20" />
+	<field name="flickr_appsecret" type="text" default="" label="Flickr Client Secret" description="The Client Secret taken from http://www.flickr.com/services/" size="20" />
+    </fieldset>
+    <fieldset name="foursquare_options" label="COM_SOCIALSTREAMS_CONFIG_FOURSQUARE_LABEL" description="COM_SOCIALSTREAMS_CONFIG_FOURSQUARE_DESCRIPTION">
+	<field name="foursquare_nicename" type="hidden" default="Foursquare" />
+	<field name="foursquare" type="radio" default="0" label="Connect to Foursquare" description="Use updates and information from Foursquare">
+	    <option value="0">No</option>
+	    <option value="1">Yes</option>
+	</field>
+	<field name="foursquare_appkey" type="text" default="" label="Foursquare API Key" description="The API Key taken from https://foursquare.com/developers/apps" size="20" />
+	<field name="foursquare_appsecret" type="text" default="" label="Foursquare Client Secret" description="The Client Secret taken from https://foursquare.com/developers/apps" size="20" />
+    </fieldset>
+</config>

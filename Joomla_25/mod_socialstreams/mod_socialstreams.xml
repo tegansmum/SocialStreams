@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : mod_social_streams.xml
+    Created on : 23 February 2012, 17:32
+    Author     : stuart
+    Description:
+        Purpose of the document follows.
+-->
+
+<install type="module" version="2.5.0">
+    <!-- Name of the Module -->
+    <name>Social Streams</name>
+
+    <!-- Name of the Author -->
+    <author>Appropriate Solutions</author>
+
+    <!-- Version Date of the Module -->
+    <creationDate>2012-12-07</creationDate>
+
+    <!-- Copyright information -->
+    <copyright>All rights reserved by Appropriate Solutions 2012.</copyright>
+
+    <!-- License Information -->
+    <license>GPL 2.0</license>
+
+    <!-- Author's email address -->
+    <authorEmail>mail@appropriatesolutions.co.uk</authorEmail>
+
+    <!-- Author's website -->
+    <authorUrl>http://www.appropriatesolutions.co.uk</authorUrl>
+
+    <!-- Module version number -->
+    <version>0.1.1</version>
+
+    <!-- Description of what the module does -->
+    <description>Displays the cached Social Media activity from a number of Social Networks in one combined stream
+    </description>
+
+    <!-- Listing of all files that should be installed for the module to function -->
+    <files>
+        <!-- The "module" attribute signifies that this is the main controller file -->
+	<filename module="mod_socialstreams">mod_socialstreams.php</filename>
+	<filename>helper.php</filename>
+	<filename>index.html</filename>
+	<folder>tmpl</folder>
+	<folder>css</folder>
+	<folder>images</folder>
+    </files>
+    <!-- Optional parameters -->
+    <config>
+	<fields name="params" addfieldpath="/modules/mod_socialstreams/fields">
+	    <fieldset name="basic">
+		<field name="show_connections" type="radio" default="1" label="Show Connections" description="Display the Social Media Connections along with the stream. For Facebook this would be Friends, for Twitter, Followers, etc">
+		    <option value="1">Show</option>
+		    <option value="0">Hide</option>
+		</field>
+		<field name="connection_count" type="integer" label="Number of Connection" default="8" first="1" last="20" step="1" description="The number of Social Media Connections to show in total from across all selected Social Networks" />
+		<field name="connection_image_size" type="list" default="0" label="Connection Image Size" description="What size of Profile Image should be used?">
+		    <option value="mini">Mini (24x24px)</option>
+		    <option value="normal">Normal (48x48px)</option>
+		    <option value="bigger">Bigger (73x73px)</option>
+		</field>
+		<field type="accountcheckboxes" name="active_accounts" label="Show Accounts" description="Check the Registered Social Media accounts to show in this module" />
+	    </fieldset>
+	    <fieldset name="advanced">
+		<field name="twitter_show_image" type="radio" default="0" label="Show Twitter Profile Image" description="Show the profile image for the Twitter account?">
+		    <option value="0">Hide Image</option>
+		    <option value="1">Show Image</option>
+		</field>
+		<field name="google_show_content" type="radio" default="0" label="Show Full Google+ Content" description="Google+ posts can get very large, should the full content be displayed or just the title?">
+		    <option value="0">Only Title</option>
+		    <option value="1">Full Content</option>
+		</field>
+		<field name="moduleclass_sfx" type="text" default="" label="Module Class Suffix" description="PARAMMODULECLASSSUFFIX" />
+	    </fieldset>
+	</fields>
+    </config>
+</install>
