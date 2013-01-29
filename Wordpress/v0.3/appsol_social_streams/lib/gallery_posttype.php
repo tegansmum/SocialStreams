@@ -4,41 +4,6 @@
  * and open the template in the editor.
  */
 
-function appsol_social_streams_create_post_types() {
-    $labels = array(
-        'name' => _x('Galleries', 'post type general name'),
-        'singular_name' => _x('Gallery', 'post type singular name'),
-        'add_new' => _x('Add New', 'appsol_social_streams_gallery'),
-        'add_new_item' => __('Add New Gallery'),
-        'edit_item' => __('Edit Gallery'),
-        'new_item' => __('New Gallery'),
-        'all_items' => __('All Galleries'),
-        'view_item' => __('View Gallery'),
-        'search_items' => __('Search Galleries'),
-        'not_found' => __('No Galleries found'),
-        'not_found_in_trash' => __('No Galleries found in Trash')
-    );
-    $args = array(
-        'labels' => $labels,
-        'public' => true,
-        'publicly_queryable' => true,
-        'exclude_from_search' => false,
-        'show_ui' => true,
-        'show_in_menu' => true,
-        'menu_position' => 20,
-        'query_var' => 'gallery',
-        'rewrite' => array('slug' => 'social-gallery'),
-        'capability_type' => 'post',
-        'has_archive' => true,
-        'hierarchical' => false,
-//        'menu_position' => null,
-        'supports' => array(
-            'title', 'editor', 'author', 'thumbnail', 'excerpt', 'custom-fields'
-        ),
-        'taxonomies' => array('category', 'post_tag')
-    );
-    register_post_type('social_gallery', $args);
-}
 
 function appsol_social_streams_gallery_create_meta() {
     add_meta_box('appsol_social_streams_gallery', __('Gallery'), 'appsol_social_streams_gallery_meta', 'social_gallery', 'normal', 'high');

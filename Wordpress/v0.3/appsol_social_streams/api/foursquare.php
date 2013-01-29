@@ -1,6 +1,4 @@
 <?php
-
-defined('_JEXEC') or die('Restricted access');
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -18,37 +16,21 @@ class foursquareHelper {
     public static $debug = 1;
 
     public static function setup($userid = null) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'foursquareHelper::setup'));
         self::$client = new SocialStreamsFoursquare();
         self::$client->user = $userid;
         self::$client->debug = self::$debug;
         self::$client->server = self::$server;
         self::$client->scope = self::$scope;
-        self::$client->redirect_uri = JURI::base() . 'index.php?option=com_socialstreams&task=socialstream.setauth&network=foursquare';
+        self::$client->redirect_uri = SocialStreamsHelper::getAuthRedirectUrl() . '&network=foursquare';
 
         if (strlen(SocialStreamsHelper::getParameter('foursquare_appkey')) == 0 || strlen(SocialStreamsHelper::getParameter('foursquare_appsecret')) == 0)
             return false;
         self::$client->client_id = SocialStreamsHelper::getParameter('foursquare_appkey');
         self::$client->client_secret = SocialStreamsHelper::getParameter('foursquare_appsecret');
 
-        if ($success = self::$client->Initialize()) {
-            if ($success = self::$client->Process()) {
-                if (strlen(self::$client->access_token)) {
-                    $success = self::$client->CallAPI(
-                            'https://api.foursquare.com/v2/users/self', 'GET', array(), array('FailOnAccessError' => true), $user);
-                }
-            }
-            $success = self::$client->Finalize($success, $user);
-        }
-        if (self::$client->exit) {
-            $app = JFactory::getApplication();
-            $app->close();
-        }
-        if ($success)
-            return self::$client;
-        return false;
+        $user = self::$client->Bootstrap();
+
+        return $user ? self::$client : false;
     }
 
 }
@@ -60,15 +42,16 @@ class SocialStreamsFoursquare extends SocialStreamsApi {
     public function getNetwork() {
         return 'foursquare';
     }
-    
+
     public function getTokenLifetime() {
         return 0;
     }
 
-    public function getProfile($id = 'me') {
+    public function getProfile($id = 'self') {
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . 'users/' . $id, 'GET', array(), array('FailOnAccessError' => true), $user);
-
+        SocialStreamsHelper::log($user);
+        
         $success = $this->Finalize($success);
 
         if ($success) {
@@ -79,37 +62,34 @@ class SocialStreamsFoursquare extends SocialStreamsApi {
         return false;
     }
 
-    public function getConnectedProfiles() {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFoursquare::getConnectedProfiles'));
+    public function getConnectedProfiles(&$friend_count) {
         $my_friends = array();
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . 'users/' . $this->user . '/friends', 'GET', array(), array('FailOnAccessError' => true), $friends);
-
+        SocialStreamsHelper::log($friends);
+        
         $success = $this->Finalize($success);
         if ($success) {
-            $friend_total = count($friends->response->friends->items);
+            $friend_count = $friends->response->friends->count;
             $stored_connections = SocialStreamsHelper::getParameter('stored_connections');
             $show_friends = $friends->response->friends->items;
-            $show_friends = $friend_total > $stored_connections ?
-                    array_slice(shuffle($show_friends), 0, $stored_connections) : $show_friends;
+            shuffle($show_friends);
+            $show_friends = $friend_count > $stored_connections ?
+                    array_slice($show_friends, 0, $stored_connections) : $show_friends;
             foreach ($show_friends as $friend) {
-                $friend = $this->getProfile($friend->id);
-                $my_friends[$friend->networkid] = $friend;
+                $profile = new SocialStreamsFoursquareProfile();
+                $profile->setProfile($friend);
+                $my_friends[$profile->networkid] = $profile;
             }
         }
         return $my_friends;
     }
 
     public function getItems() {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFoursquare::getItems'));
         $my_feed = array();
         if (strlen($this->access_token))
-            $success = self::CallAPI($this->api_url .'users/' . $this->user . '/checkins', 'GET', array(), array('FailOnAccessError' => true), $feed);
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($feed, true)));
+            $success = self::CallAPI($this->api_url . 'users/' . $this->user . '/checkins', 'GET', array(), array('FailOnAccessError' => true), $feed);
+        SocialStreamsHelper::log($feed);
 
         $success = $this->Finalize($success);
         if ($success) {
@@ -125,10 +105,6 @@ class SocialStreamsFoursquare extends SocialStreamsApi {
 
         return false;
     }
-    
-    public function getStats(){
-        
-    }
 
 }
 
@@ -143,27 +119,37 @@ class SocialStreamsFoursquareProfile extends SocialStreamsProfile {
         parent::__construct($wraptag);
     }
 
-    public function setProfile($profile) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFoursquareProfile::setProfile'));
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($profile, true)));
-        if(isset($profile->response->user))
+    public function getConnectVerb() {
+        return 'follow';
+    }
+
+    public function setProfile($profile, $short = false) {
+        if (isset($profile->response->user))
             $profile = $profile->response->user;
-        $profile_image = $profile->photo->prefix . '100x100' . $profile->photo->suffix;
+        $profile_image = isset($profile->photo->prefix) ?
+                $profile->photo->prefix . '100x100' . $profile->photo->suffix : $profile->photo;
         $this->networkid = $profile->id;
         $this->user = isset($profile->username) ? $profile->username : '';
         $this->name = $profile->firstName . ' ' . $profile->lastName;
         $this->url = isset($profile->contact->twitter) ? 'https://foursquare.com/' . $profile->contact->twitter : 'https://foursquare.com/user/' . $profile->id;
         $this->image = $profile_image;
-        if (isset($profile->profile))
-            $this->profile = json_decode($profile->profile);
-        elseif (is_object($profile))
-            $this->profile = $profile;
+        if (!$short) {
+            if (isset($profile->profile))
+                $this->profile = json_decode($profile->profile);
+            elseif (is_object($profile))
+                $this->profile = $profile;
+        }
     }
-    
-    public function store(){
-        return get_object_vars($this);
+
+    public function getStats() {
+        if (isset($this->profile->friends)) {
+            $connections = $this->profile->friends->count;
+        } elseif (isset($this->profile->followers)) {
+            $connections = $this->profile->followers->count;
+        } else {
+            $connections = $this->profile->connections;
+        }
+        return array('name' => 'friends', 'count' => $connections);
     }
 
 }
@@ -175,12 +161,12 @@ class SocialStreamsFoursquareItem extends SocialStreamsItem {
         $this->nicename = 'Foursquare';
         parent::__construct($wraptag);
     }
+    
+    public function getPromoteVerb() {
+        return 'follow';
+    }
 
     function setUpdate($checkin, $user = null) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFoursquareItem::setUpdate'));
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'Post -> ' . print_r($post, true)));
 
         $this->networkid = $checkin->id;
         // Is this a stored Post from the DB or from the API?
@@ -189,26 +175,15 @@ class SocialStreamsFoursquareItem extends SocialStreamsItem {
             $this->item = json_decode($checkin->item);
             if (isset($checkin->profile)) {
                 $this->profile = new SocialStreamsFoursquareProfile();
-                $this->profile->setProfile($checkin->profile);
+                $this->profile->setProfile($checkin->profile, true);
             }
         } elseif (is_object($checkin)) {
             // Fresh Post from API
             $this->item = $checkin;
             $this->profile = new SocialStreamsFoursquareProfile();
-            $this->profile->setProfile(isset($checkin->profile) ? $checkin->profile : $checkin->user);
+            $this->profile->setProfile(isset($checkin->profile) ? $checkin->profile : $checkin->user, true);
         }
-        $this->published = JFactory::getDate(intval($checkin->createdAt))->toMySQL();
-    }
-
-    function store() {
-        $array = array(
-            'network' => $this->network,
-            'profile' => $this->profile,
-            'networkid' => $this->networkid,
-            'published' => $this->published,
-            'item' => $this->item
-        );
-        return $array;
+        $this->published = date('Y-m-d H:i:s', intval($checkin->createdAt));
     }
 
     function styleUpdate() {
@@ -264,9 +239,6 @@ class SocialStreamsFoursquareItem extends SocialStreamsItem {
     }
 
     function getUpdateActions() {
-//        jimport('joomla.error.log');
-//        $errorLog = & JLog::getInstance();
-//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'appsolFoursquareItem::setUpdateActions'));
         $allowed_actions = array('like', 'comment');
         $actions = array();
         foreach ($this->item->actions as $action) {
@@ -285,6 +257,4 @@ class SocialStreamsFoursquareItem extends SocialStreamsItem {
     }
 
 }
-
-?>
 

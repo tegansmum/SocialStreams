@@ -1,0 +1,194 @@
+/* 
+    Document   : default
+    Created on : 08-Sep-2011, 15:10:41
+    Author     : stuart
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+.widget.social-streams { 
+    background-color: #fff;
+}
+.widget.social-streams .stream,
+.widget.social-streams .social-metrics,
+.widget.social-streams .connections {
+    margin: 0 8px 8px;
+    overflow: hidden;
+}
+.widget.social-streams .stream {
+    height: 200px;
+    overflow: auto;
+}
+.widget.social-streams .stream .stream-item {
+    margin-bottom: 4px;
+    border: 1px solid #c0c0c0;
+    background-color: #fff;
+    padding: 4px;
+    overflow: hidden;
+}
+.widget.social-streams .stream .stream-item .profile-image {
+    float: left;
+    margin: 0 4px 4px 0;
+}
+.widget.social-streams .stream .stream-item .stream-item-title {
+    display: block;
+    font-weight: bolder;
+    margin-bottom: 2px;
+}
+.widget.social-streams .stream .stream-item .stream-item-video,
+.widget.social-streams .stream .stream-item .stream-item-photo,
+.widget.social-streams .stream .stream-item .stream-item-link .stream-item-photo-image-link {
+    float: right;
+    margin: 0 0 2px 4px;
+}
+.widget.social-streams .stream .stream-item .stream-item-link .stream-item-photo-caption {
+    display: block;
+}
+.widget.social-streams .stream .stream-item .stream-item-link {
+    font-weight: bolder;
+    color: #0080ff; 
+}
+.widget.social-streams .stream .stream-item .meta {
+    clear: both;
+    display: block;
+    margin: 2px 0;
+    height: 16px;
+    line-height: 16px;
+    font-size: 0.85em;
+}
+.widget.social-streams .stream .stream-item .meta .attribution {
+    padding-left: 18px;
+}
+/* Social Media Streams */
+.widget.social-streams .stream .facebook .meta .attribution {
+    background: url('../images/facebook-16x16.png') 0 50% no-repeat;
+}
+.widget.social-streams .stream .twitter .meta .attribution {
+    background: url('../images/twitter-16x16.png') 0 50% no-repeat;
+}
+.widget.social-streams .stream .linkedin .meta .attribution {
+    background: url('../images/linkedin-16x16.png') 0 50% no-repeat;
+}
+.widget.social-streams .stream .gplus .meta .attribution {
+    background: url('../images/google+-16x16.png') 0 50% no-repeat;
+}
+.widget.social-streams .stream .instagram .meta .attribution {
+    background: url('../images/instagram-16x16.png') 0 50% no-repeat;
+}
+.widget.social-streams .stream .stream-item .meta .profile-name {
+    font-weight: bolder;
+}
+.widget.social-streams .stream .stream-item .actions {
+    display: block;
+}
+.widget.social-streams .stream .stream-item .actions .action {
+    height: 20px;
+    margin-bottom: 2px;
+}
+.widget.social-streams .stream .stream-item .actions .action .stream-item-action {
+    padding: 2px 4px;
+    background-color: #ddd;
+    border: 1px solid #c0c0c0;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+.widget.social-streams .stream .stream-item .actions .action a:hover {
+    background-color: #eee;
+}
+.widget.social-streams .stream .stream-item .actions .action .tally {
+    padding-right: 8px;
+}
+.widget.social-streams .stream .stream-item .actions .action .tally .count {
+    font-weight: bolder;
+}
+.widget.social-streams .social-metrics .social-metric {
+    display: inline-block;
+    float: left;
+    margin-bottom: 4px;
+    height: 32px;
+    width: 50%;
+}
+.widget.social-streams .social-metrics .social-metric .profile-link {
+    display: block;
+    background-color: #eaeaea;
+    border: 1px solid #c0c0c0;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    padding: 2px 2px 2px 30px;
+    margin-right: 4px;
+    height: 26px;
+    line-height: 30px;
+}
+.widget.social-streams .social-metrics .facebook .profile-link {
+    background: #eaeaea url('../images/facebook-24x24.png') 4px 50% no-repeat;
+}
+.widget.social-streams .social-metrics .twitter .profile-link {
+    background: #eaeaea url('../images/twitter-24x24.png') 4px 50% no-repeat;
+}
+.widget.social-streams .social-metrics .linkedin .profile-link {
+    background: #eaeaea url('../images/linkedin-24x24.png') 4px 50% no-repeat;
+}
+.widget.social-streams .social-metrics .gplus .profile-link {
+    background: #eaeaea url('../images/google+-24x24.png') 4px 50% no-repeat;
+}
+.widget.social-streams .social-metrics .instagram .profile-link {
+    background: #eaeaea url('../images/instagram-24x24.png') 4px 50% no-repeat;
+}
+.widget.social-streams .social-metrics .social-metric .profile-link:hover {
+    background-color: #f1f1f1;
+    border-color: #cecece;
+}
+.widget.social-streams .connections .connection {
+    display: inline-block;
+    float: left;
+    margin: 0 5px 4px 0;
+    height: 48px;
+    width: 48px;
+}
+.widget.social-streams .connections .connection a {
+    position: relative;
+    display: block;
+    height: 100%
+}
+.widget.social-streams .connections .connection .social-network-icon {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    height: 16px;
+    width: 16px;
+}
+.widget.social-streams .connections .facebook .social-network-icon {
+    background: url('../images/facebook-16x16.png') 0 0 no-repeat;
+}
+.widget.social-streams .connections .twitter .social-network-icon {
+    background: url('../images/twitter-16x16.png') 0 0 no-repeat;
+}
+.widget.social-streams .connections .linkedin .social-network-icon {
+    background: url('../images/linkedin-16x16.png') 0 0 no-repeat;
+}
+.widget.social-streams .connections .gplus .social-network-icon {
+    background: url('../images/google+-16x16.png') 0 0 no-repeat;
+}
+.widget.social-streams .connections .instagram .social-network-icon {
+    background: url('../images/instagram-16x16.png') 0 0 no-repeat;
+}
+@media only screen and (max-width: 480px), only screen and (max-device-width: 480px) {
+    body:first-child:before {
+	content: '<script type="text/javascript">var deviceType="handheld";</script>';
+    }
+    body:first-child {
+	border-color: red;
+    }
+}
+.touchscreen .widget.social-streams .stream
+{
+    height: auto;
+    overflow: visible;
+}
+.touchscreen .stream-item:nth-child(n+6)
+    {
+        display: none;
+    }

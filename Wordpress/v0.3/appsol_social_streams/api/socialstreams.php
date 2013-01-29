@@ -23,7 +23,33 @@ class SocialStreamsHelper {
     }
 
     public static function getParameter($name) {
+        if (strpos($name, 'social_streams_') === FALSE)
+            $name = 'social_streams_' . $name;
         return get_option($name);
+    }
+
+    public static function setParameter($name, $value) {
+        if (strpos($name, 'social_streams_') === FALSE)
+            $name = 'social_streams_' . $name;
+        return update_option($name, $value);
+    }
+
+    public static function getTransient($name) {
+        if (strpos($name, 'social_streams_') === FALSE)
+            $name = substr('social_streams_' . $name, 0, 40);
+        return get_transient($name);
+    }
+
+    public static function setTransient($name, $value, $expires) {
+        if (strpos($name, 'social_streams_') === FALSE)
+            $name = substr('social_streams_' . $name, 0, 40);
+        return set_transient($name, $value, $expires);
+    }
+
+    public static function removeTransient($name) {
+        if (strpos($name, 'social_streams_') === FALSE)
+            $name = substr('social_streams_' . $name, 0, 40);
+        return delete_transient($name);
     }
 
     public static function getNetworkHelper($network) {
@@ -31,7 +57,16 @@ class SocialStreamsHelper {
         $helper = $network . 'Helper';
         if (!class_exists($helper) || !property_exists($helper, 'client'))
             return false;
+
         return $helper;
+    }
+
+    public static function getBaseRedirectUrl() {
+        return get_admin_url(null, 'plugins.php?page=appsol_social_streams');
+    }
+
+    public static function getAuthRedirectUrl() {
+        return get_admin_url(null, 'plugins.php?page=appsol_social_streams&get_auth=1');
     }
 
     /**
@@ -43,14 +78,14 @@ class SocialStreamsHelper {
      * @return boolean 
      */
     public static function getApi($network, $userid = null) {
-        self::log('Network: ' . $network . ' UserID: ' . $userid);
-
-        if (isset(self::$clients[$network]))
-            return self::$clients[$network];
+        if ($userid && isset(self::$clients[$network][$userid]))
+            return self::$clients[$network][$userid];
         if ($helper = self::getNetworkHelper($network))
-            if (self::$clients[$network] = call_user_func(array($helper, 'setup'), $userid))
-                return self::$clients[$network];
-
+            if ($client = call_user_func(array($helper, 'setup'), $userid)) {
+                if ($userid)
+                    self::$clients[$network][$userid] = $client;
+                return $client;
+            }
         return false;
     }
 
@@ -60,31 +95,35 @@ class SocialStreamsHelper {
      * @return array List of active networks to work with Joomla select.options
      */
     public static function getNetworks() {
-        $all_networks = get_option('socialstreams_networks');
+        $all_networks = self::getParameter('networks');
         $active_networks = array();
-        foreach ($all_networks as $network) {
-            if ($network_options = get_option('socialstreams_' . $network)) {
-                if (!empty($network_options['appkey']) && !empty($network_options['appsecret']))
-                    $active_networks[] = $network;
+        if ($all_networks) {
+            $all_networks = explode(',', $all_networks);
+            foreach ($all_networks as $network) {
+                if ($network_options = get_option('social_streams_' . $network)) {
+                    if (self::getParameter($network . '_appkey') && self::getParameter($network . '_appsecret'))
+                        $active_networks[] = $network;
+                }
             }
         }
         return $active_networks;
     }
 
-    public static function getAuthenticatedNetworks() {
-        $all_networks = self::getNetworks();
+    public static function getAuthenticatedAccounts($network = '') {
+        $all_networks = $network ? array($network) : self::getNetworks();
         $authenticated_networks = array();
         foreach ($all_networks as $network) {
-            $network_clients = get_option('socialstreams_' . $network . '_clients');
-            foreach ($network_clients as $clientid) {
-                if ($auth = self::getAuth($network, $clientid)) {
-                    $authenticated_networks[] = array(
-                        'network' => $network,
-                        'clientid' => $clientid,
-                        'access_token' => $auth['value'],
-                        'expiry' => $auth['expiry'],
-                        'authorized' => $auth['authorized']
-                    );
+            if ($network_clients = self::getParameter($network . '_clients')) {
+                foreach ($network_clients as $clientid) {
+                    if ($auth = self::getAuth($network, $clientid)) {
+                        $authenticated_networks[] = array(
+                            'network' => $network,
+                            'clientid' => $clientid,
+                            'access_token' => $auth['value'],
+                            'expiry' => $auth['expiry'],
+                            'authorized' => $auth['authorized']
+                        );
+                    }
                 }
             }
         }
@@ -95,6 +134,11 @@ class SocialStreamsHelper {
         require_once(dirname(__FILE__) . '/' . $network . '.php');
         $class = 'SocialStreams' . ucfirst($network) . 'Profile';
         $profile = new $class($wraptag);
+        if ($networkid)
+            if ($stored_profile = self::getTransient($network . '_' . $networkid))
+                $profile->setProfile($stored_profile);
+            else
+                return false;
         return $profile;
     }
 
@@ -102,25 +146,38 @@ class SocialStreamsHelper {
         require_once(dirname(__FILE__) . '/' . $network . '.php');
         $class = 'SocialStreams' . ucfirst($network) . 'Item';
         $item = new $class($wraptag);
+        if ($networkid)
+            if ($stored_item = self::getTransient($network . '_' . $networkid))
+                $item->setUpdate($stored_item);
+            else
+                return false;
         return $item;
     }
 
     public static function storeAuth($auth) {
         self::log($auth);
-        $required = array('network', 'clientid', 'access_token', 'access_token_secret', 'expires', 'state');
+        $required = array('network', 'clientid', 'access_token', 'expires', 'state');
         foreach ($required as $key)
             if (empty($auth[$key]))
                 return false;
-        $transient_name = 'socialstreams_' . $network . '_auth_' . $auth['clientid'];
+        $transient_name = $auth['network'] . '_auth_' . $auth['clientid'];
         $expires = strtotime($auth['expires']) - time();
-        set_transient($transient_name, $auth, $expires);
+        self::setTransient($transient_name, $auth, $expires);
+        self::updateClientIds($auth['network'], $auth['clientid']);
         return true;
     }
 
+    /**
+     * Returns the locally stored OAuth Access Token
+     * @param string $network
+     * @param string $clientid
+     * @return boolean
+     */
     public static function getAuth($network, $clientid) {
-        self::log('Network: ' . $network . ' User: ' . $user);
-        $transient_name = 'socialstreams_' . $network . '_auth_' . $clientid;
-        if ($auth = get_transient($transient_name)) {
+        if (empty($clientid))
+            return false;
+        $transient_name = $network . '_auth_' . $clientid;
+        if ($auth = self::getTransient($transient_name)) {
             $access_token = array(
                 'value' => $auth['access_token'],
                 'expiry' => $auth['expires'],
@@ -136,7 +193,30 @@ class SocialStreamsHelper {
         return false;
     }
 
-    public function shutdown() {
+    public static function updateClientIds($network, $clientid) {
+        if (!$clientids = self::getParameter($network . '_clients'))
+            $clientids = array();
+        if (!in_array($clientid, $clientids))
+            $clientids[] = $clientid;
+        self::setParameter($network . '_clients', $clientids);
+        return true;
+    }
+
+    public static function removeClientId($network, $client_id) {
+        if (!$clientids = self::getParameter($network . '_clients'))
+            return true;
+        if (!in_array($client_id, $clientids))
+            return true;
+        $new_clientids = array();
+        foreach ($clientids as $id)
+            if ($id != $client_id)
+                $new_clientids[] = $id;
+        self::setParameter($network . '_clients', $new_clientids);
+        return true;
+    }
+
+    public static function shutdown() {
+        self::log('Shutting Down for Redirect');
         die();
     }
 
@@ -150,6 +230,11 @@ class SocialStreamsHelper {
  */
 abstract class SocialStreamsApi extends oauth_client_class {
 
+    public function __construct() {
+            $this->debug = WP_DEBUG;
+            $this->debug_http = WP_DEBUG;
+    }
+
     public function Bootstrap() {
         SocialStreamsHelper::log();
         if ($success = $this->Initialize()) {
@@ -159,13 +244,19 @@ abstract class SocialStreamsApi extends oauth_client_class {
                         $success = false;
                 }
             }
+            if ($success && !empty($user))
+                $this->user = $user->networkid;
             $success = $this->Finalize($success);
         }
         if ($this->exit) {
             SocialStreamsHelper::shutdown();
         }
+        if (strlen($this->authorization_error)) {
+            $this->error = $this->authorization_error;
+            $success = false;
+        }
         if ($success)
-            $this->user = $user->networkid;
+            SocialStreamsProfileCache::save($this->user, $user->store());
 
         return $success ? $user : $success;
     }
@@ -179,16 +270,19 @@ abstract class SocialStreamsApi extends oauth_client_class {
      */
     public function GetAccessToken(&$access_token) {
         $access_token = array();
-        // First check the session
-        if (@session_start())
-            if (IsSet($_SESSION['OAUTH_ACCESS_TOKEN'][$this->access_token_url]))
-                $access_token = $_SESSION['OAUTH_ACCESS_TOKEN'][$this->access_token_url];
-        // Nothing found in the Session so look for a valid token in the DB
-        if (empty($access_token)) {
-            $user = (isset($this->user) && !empty($this->user)) ? $this->user : '';
-            $access_token = SocialStreamsHelper::getAuth($this->getNetwork(), $user);
-        }
+        // First check the session this is required when authenticating from the Admin
+        parent::GetAccessToken($access_token);
 
+        // Nothing found in the Session so look for a valid token in the DB
+        if (isset($this->user) && !empty($this->user)) {
+            SocialStreamsHelper::log($this->user);
+            if ($stored_access_token = SocialStreamsHelper::getAuth($this->getNetwork(), $this->user)) {
+                $access_token = $stored_access_token;
+                // Nothing in the DB but we have a session access token so we'll store that
+            } elseif ($access_token) {
+                $this->StoreAccessToken($access_token);
+            }
+        }
         return true;
     }
 
@@ -201,8 +295,10 @@ abstract class SocialStreamsApi extends oauth_client_class {
      */
     public function StoreAccessToken($access_token) {
 
+        SocialStreamsHelper::log($access_token);
         parent::StoreAccessToken($access_token);
 
+        // Not authorised yet so just carry on for now
         if (!$access_token['authorized'])
             return true;
 
@@ -215,7 +311,7 @@ abstract class SocialStreamsApi extends oauth_client_class {
             'network' => $this->getNetwork(),
             'access_token' => $this->access_token,
             'access_token_secret' => $this->access_token_secret,
-            'expires' => empty($access_token['expiry']) ? JFactory::getDate(time() + (60 * 60 * 24 * 60))->toMySQL() : JFactory::getDate($access_token['expiry'])->toMySQL(),
+            'expires' => empty($access_token['expiry']) ? date('Y-m-d H:i:s', time() + (60 * 60 * 24 * 60)) : $access_token['expiry'],
             'state' => $access_token['authorized']
         );
 
@@ -224,13 +320,9 @@ abstract class SocialStreamsApi extends oauth_client_class {
             $data['access_token_secret'] = $access_token['refresh_token'];
 
         // If there is a valid Client ID we should store that
-        if (!$data['clientid'] = $this->getClientid()) {
-            $profile = $this->getProfile();
-            $data['clientid'] = $profile->networkid;
-        }
-        // We've stored the access token, but we're not in a position to store a full auth to the DB
-        if (empty($data['clientid']))
+        if (!$data['clientid'] = $this->getClientid())
             return true;
+
         // Store the access token and client network id
         if (SocialStreamsHelper::storeAuth($data)) {
             // the access token is stored in the db now so we can drop the session one
@@ -241,14 +333,19 @@ abstract class SocialStreamsApi extends oauth_client_class {
         return false;
     }
 
+    /**
+     * Extends oauth_client_class::Finalize
+     * Logs failed attempts and checks for tokens approaching expiry
+     * @param type $success
+     * @return type
+     */
     public function Finalize($success) {
         if (!$success) {
             SocialStreamsHelper::log('Debug: ' . $this->debug_output);
             SocialStreamsHelper::log('Error: ' . $this->error);
-            JError::raiseWarning('500', 'Failed to Finalize API Call: ' . $this->error);
+            appsolSocialStreams::add_message('Failed to Finalize API Call: ' . $this->error, true);
         } else {
             $token = SocialStreamsHelper::getAuth($this->getNetwork(), $this->user);
-            SocialStreamsHelper::log($token);
             if (!$this->checkTokenExpiry($token)) {
                 SocialStreamsHelper::log('Token Expired');
 //                $this->Bootstrap();
@@ -270,11 +367,18 @@ abstract class SocialStreamsApi extends oauth_client_class {
     }
 
     /**
-     * Name: getClientid
-     * @return string unique identifier of the authenticated user on the social media network
+     * Returns a locally stored unique identifier of the authenticated user on the social media network
+     * If this is not available it will atempt to get one from the social media network
+     * @return string 
      */
     public function getClientid() {
-        return isset($this->user) ? $this->user : '';
+        if (isset($this->user))
+            return $this->user;
+        if ($user = $this->getProfile()) {
+            $this->user = $user->networkid;
+            return $this->user;
+        }
+        return false;
     }
 
     /**
@@ -303,7 +407,7 @@ abstract class SocialStreamsApi extends oauth_client_class {
      * @abstract
      * @return array of objects extend SocialStreamsProfile
      */
-    abstract public function getConnectedProfiles();
+    abstract public function getConnectedProfiles(&$connection_count);
 
     /**
      * Name: getItems
@@ -311,13 +415,6 @@ abstract class SocialStreamsApi extends oauth_client_class {
      * @return array of objects of class that extends SocialStreamsItem
      */
     abstract public function getItems();
-
-    /**
-     * Name: getStats
-     * @abstract
-     * @return integer number of connections the user has in the social network 
-     */
-    abstract public function getStats();
 }
 
 /**
@@ -325,7 +422,9 @@ abstract class SocialStreamsApi extends oauth_client_class {
  * holds the profile data from a social network and presents a common interface
  * @abstract
  */
-abstract class SocialStreamsProfile {
+abstract
+
+class SocialStreamsProfile {
 
     public $id = '';
     public $network = '';
@@ -343,18 +442,37 @@ abstract class SocialStreamsProfile {
         $this->wraptag = $wraptag;
     }
 
-    abstract public function setProfile($profile);
+    abstract public function setProfile($profile, $short = false);
+
+    abstract public function getConnectVerb();
+
+    /**
+     * Name: getStats
+     * @abstract
+     * @return integer number of connections the user has in the social network 
+     */
+    abstract public function getStats();
 
     /**
      * Name: store
-     * cretaes an associative array ready to store in the database
+     * creates an associative array ready to store in the database
+     * Overload this function if unsuitable
      * @return array 
      */
-    abstract function store();
+    public function store($connection_count = null) {
+        $this->setExpires();
+        if ($connection_count) {
+            if (is_object($this->profile))
+                $this->profile->connections = $connection_count;
+            if (is_array($this->profile))
+                $this->profile['connections'] = $connection_count;
+        }
+        return $this;
+    }
 
     public function setExpires() {
-        $jparams = JComponentHelper::getParams('com_socialstreams');
-        $this->expires = time() + $jparams->get('profile_period');
+        $period = SocialStreamsHelper::getParameter('profile_period');
+        $this->expires = date('Y-m-d H:i:s', time() + $period);
     }
 
     public function display() {
@@ -385,7 +503,7 @@ abstract class SocialStreamsItem {
     public $display_date = '';
     public $profile = null;
     public $actions = array();
-    protected $wraptag = 'li';
+    public $wraptag = 'li';
     protected $url_pattern = '/\b((https?|ftp|file):\/\/|(www|ftp)\.)[-A-Z0-9+&@#\/%?=~_|$!:,.;]*/i';
 
     function __construct($wraptag = 'li') {
@@ -397,14 +515,16 @@ abstract class SocialStreamsItem {
      * recives the update data from the social network and creates a unified interface for external use
      * @param various the returned status update from the social network api 
      */
-    abstract function setUpdate($update);
+    abstract public function setUpdate($update);
+
+    abstract public function getPromoteVerb();
 
     /**
      * Name: styleUpdate
      * creates html of the update to show in the stream
      * @return string an html snippet 
      */
-    abstract function styleUpdate();
+    abstract public function styleUpdate();
 
     /**
      * Name: getUpdateActions
@@ -412,26 +532,49 @@ abstract class SocialStreamsItem {
      * e.g. Like, retweet, etc
      * @return array an array of html snippets
      */
-    abstract function getUpdateActions();
+    abstract public function getUpdateActions();
 
     /**
      * Name: store
-     * cretaes an associative array ready to store in the database
+     * creates an associative array ready to store in the database
+     * Overload this function if unsuitable
      * @return array 
      */
-    abstract function store();
+    public function store() {
+        $this->setExpires();
+//        return get_object_vars($this);
+        return $this;
+    }
 
-    function display() {
-        $html = '<' . $this->wraptag . ' class="stream-item ' . $this->network . '">';
-        $html.= '<span class="profile-image"><a href="' . $this->profile->url . '" rel="nofollow" target="_blank" title="' . $this->profile->name . '\'s ' . $this->nicename . ' Profile' . '"><img width="48px" height="48px" src="' . $this->profile->image . '" /></a></span>';
-        $html.= '<span class="message">' . $this->styleUpdate() . '</span>';
-        $html.= '<span class="meta">Posted <span class="post-date">' . $this->display_date . '</span> by <a class="profile-name" href="' . $this->profile->url . '" rel="nofollow">' . $this->profile->name . '</a></span>';
-        $html.= '<span class="actions">';
+    public function setExpires() {
+        $period = SocialStreamsHelper::getParameter('item_period');
+        $this->expires = date('Y-m-d H:i:s', time() + $period);
+    }
+
+    public function setProfile($networkid) {
+        if ($profile = SocialStreamsHelper::getProfile($this->network, 'div', $networkid)) {
+            $this->profile = $profile;
+            return true;
+        }
+        return false;
+    }
+
+    public function display() {
+        $html = array();
+        $html[] = '<' . $this->wraptag . ' class="stream-item ' . $this->network . '">';
+        $html[] = '<div class="message">' . $this->styleUpdate() . '</div>';
+        $html[] = '<div class="meta">';
+        $html[] = '<span class="profile-image"><a href="' . $this->profile->url . '" rel="nofollow" target="_blank" title="' . $this->profile->name . '\'s ' . $this->nicename . ' Profile' . '"><img width="48px" height="48px" src="' . $this->profile->image . '" /></a></span>';
+        $html[] = '<span class="attribution">Posted <span class="post-date">' . $this->display_date . '</span> by <a class="profile-name" href="' . $this->profile->url . '" rel="nofollow">' . $this->profile->name . '</a></span>';
+        $html[] = '</div>';
+        $html[] = '<div class="actions">';
+        $html[] = '<ul>';
         foreach ($this->getUpdateActions() as $action)
-            $html.= '<span class="action">' . $action . '</span>';
-        $html.= '</span>';
-        $html.= '</' . $this->wraptag . '>';
-        return $html;
+            $html[] = '<li class="action">' . $action . '</li>';
+        $html[] = '</ul>';
+        $html[] = '</div>';
+        $html[] = '</' . $this->wraptag . '>';
+        return implode("\n", $html);
     }
 
     public function toArray() {
@@ -493,5 +636,3 @@ abstract class SocialStreamsItem {
     }
 
 }
-
-?>

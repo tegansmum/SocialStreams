@@ -1,6 +1,5 @@
 <?php
 
-defined('_JEXEC') or die('Restricted access');
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -22,16 +21,16 @@ class twitterHelper {
         self::$client->debug = self::$debug;
         self::$client->debug_http = self::$debug;
         self::$client->server = self::$server;
-        self::$client->redirect_uri = JURI::base() . 'index.php?option=com_socialstreams&task=socialstream.setauth&network=twitter';
+        self::$client->redirect_uri = SocialStreamsHelper::getAuthRedirectUrl() . '&network=twitter';
 
         if (strlen(SocialStreamsHelper::getParameter('twitter_appkey')) == 0 || strlen(SocialStreamsHelper::getParameter('twitter_appsecret')) == 0)
             return false;
         self::$client->client_id = SocialStreamsHelper::getParameter('twitter_appkey');
         self::$client->client_secret = SocialStreamsHelper::getParameter('twitter_appsecret');
 
-        $success = self::$client->Bootstrap();
+        $user = self::$client->Bootstrap();
 
-        return $success ? self::$client : false;
+        return $user ? self::$client : false;
     }
 
 }
@@ -61,13 +60,11 @@ class SocialStreamsTwitter extends SocialStreamsApi {
             $params['include_entities'] = 'false';
 
         if (strlen($this->access_token)) {
-            SocialStreamsHelper::log($params);
             if (!isset($params['user_id']) && !isset($params['screen_name']))
                 $success = $this->CallAPI(
-                        $this->api_url .'account/verify_credentials.json', 'GET', array(), array('FailOnAccessError' => true), $user);
+                        $this->api_url . 'account/verify_credentials.json', 'GET', array(), array('FailOnAccessError' => true), $user);
             else
                 $success = $this->CallAPI($this->api_url . 'users/show.json', 'GET', $params, array('FailOnAccessError' => true), $user);
-            SocialStreamsHelper::log($user);
         }
 
         $success = $this->Finalize($success);
@@ -81,23 +78,18 @@ class SocialStreamsTwitter extends SocialStreamsApi {
         return false;
     }
 
-    public function getConnectedProfiles($id = null, $name = null) {
+    public function getConnectedProfiles(&$follower_count) {
         $only_friends = SocialStreamsHelper::getParameter('only_friends');
         $show_blocked = SocialStreamsHelper::getParameter('show_blocked');
-        $this->authorization_header = 0;
-        $this->url_parameters = 0;
+//        $this->authorization_header = 0;
+//        $this->url_parameters = 0;
         $stored_connections = SocialStreamsHelper::getParameter('stored_connections');
         $my_followers = array();
         $params = array('cursor' => -1);
-        if ($id)
-            $params['user_id'] = $id;
-        elseif ($name)
-            $params['screen_name'] = $name;
-        elseif (isset($this->user) && !empty($this->user))
-            $params['user_id'] = $this->user;
-        else
-            return false;
 
+        if (!isset($this->user) || empty($this->user))
+            return false;
+        $params['user_id'] = $this->user;
         // Get the full list of Followers IDs
         while ($params['cursor'] != 0) {
             if (strlen($this->access_token))
@@ -111,7 +103,7 @@ class SocialStreamsTwitter extends SocialStreamsApi {
                 break;
             }
         }
-        $follower_total = count($my_followers);
+        $follower_count = count($my_followers);
 
         if ($only_friends) {
             // Get a list of Twitter users the user follows
@@ -167,10 +159,9 @@ class SocialStreamsTwitter extends SocialStreamsApi {
             'user_id' => $show_followers,
             'include_entities' => 'false'
         );
-        $this->authorization_header = 1;
 
         if (strlen($this->access_token))
-            $success = $this->CallAPI($this->api_url . 'users/lookup.json', 'POST', $params, array('FailOnAccessError' => true), $followers);
+            $success = $this->CallAPI($this->api_url . 'users/lookup.json', 'GET', $params, array('FailOnAccessError' => true), $followers);
 
         $success = $this->Finalize($success);
         if (!is_array($followers))
@@ -206,11 +197,10 @@ class SocialStreamsTwitter extends SocialStreamsApi {
         else
             return false;
 
-        $this->authorization_header = 0;
-        $this->url_parameters = 0;
+//        $this->authorization_header = 0;
+//        $this->url_parameters = 0;
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . 'statuses/user_timeline.json', 'GET', $params, array('FailOnAccessError' => true), $tweets);
-        SocialStreamsHelper::log($tweets);
 
         $success = $this->Finalize($success);
 
@@ -231,10 +221,6 @@ class SocialStreamsTwitter extends SocialStreamsApi {
         return false;
     }
 
-    public function getStats() {
-        
-    }
-
 }
 
 class SocialStreamsTwitterProfile extends SocialStreamsProfile {
@@ -245,22 +231,28 @@ class SocialStreamsTwitterProfile extends SocialStreamsProfile {
         parent::__construct($wraptag);
     }
 
-    public function setProfile($profile) {
+    public function getConnectVerb() {
+        return 'follow';
+    }
+
+    public function setProfile($profile, $short = false) {
         $this->networkid = $profile->id_str;
         if (isset($profile->name)) {
             $this->user = $profile->screen_name;
             $this->name = $profile->name;
             $this->url = 'http://twitter.com#!/' . $profile->screen_name;
             $this->image = str_ireplace(array('_bigger', '_mini', '_original'), '_normal', $profile->profile_image_url);
-            if (isset($profile->profile))
-                $this->profile = json_decode($profile->profile);
-            elseif (is_object($profile))
-                $this->profile = $profile;
+            if (!$short) {
+                if (isset($profile->profile))
+                    $this->profile = json_decode($profile->profile);
+                elseif (is_object($profile))
+                    $this->profile = $profile;
+            }
         }
     }
 
-    public function store() {
-        return get_object_vars($this);
+    public function getStats() {
+        return array('name' => 'followers', 'count' => $this->profile->followers_count);
     }
 
 }
@@ -273,6 +265,10 @@ class SocialStreamsTwitterItem extends SocialStreamsItem {
         parent::__construct($wraptag);
     }
 
+    public function getPromoteVerb() {
+        return 'retweet';
+    }
+
     function setUpdate($tweet) {
         $this->networkid = $tweet->id_str;
         // Is this a stored Tweet from the DB or from the API?
@@ -280,25 +276,16 @@ class SocialStreamsTwitterItem extends SocialStreamsItem {
             $this->item = json_decode($tweet->item);
             if (isset($tweet->profile)) {
                 $this->profile = new SocialStreamsTwitterProfile();
-                $this->profile->setProfile($tweet->profile);
+                $this->profile->setProfile($tweet->profile, true);
             }
         } elseif (is_object($tweet)) {
             $this->item = $tweet;
-            $this->profile = new SocialStreamsTwitterProfile();
-            $this->profile->setProfile(isset($post->profile) ? $post->profile : $tweet->user);
+            if (!$this->setProfile($tweet->user->id_str)) {
+                $this->profile = new SocialStreamsTwitterProfile();
+                $this->profile->setProfile($tweet->user, true);
+            }
         }
-        $this->published = JFactory::getDate(strtotime($tweet->created_at))->toMySQL();
-    }
-
-    public function store() {
-        $array = array(
-            'network' => $this->network,
-            'profile' => $this->profile,
-            'networkid' => $this->networkid,
-            'published' => $this->published,
-            'item' => $this->item
-        );
-        return $array;
+        $this->published = date('Y-m-d H:i:s', strtotime($tweet->created_at));
     }
 
     function styleUpdate() {
@@ -343,7 +330,7 @@ class SocialStreamsTwitterItem extends SocialStreamsItem {
             $name = $this->item->retweet_count > 1 ? 'retweets' : 'retweet';
             $tally = '<span class="tally"><span class="count">' . $this->item->retweet_count . '</span> ' . $name . '</span>';
         }
-        $actions['retweet'] = '<a class="stream-item-action retweet" target="_blank" rel="nofollow" href="http://twitter.com/share?text=' . $tweet_text . '&via=' . $this->profile->user . '">Retweet</a>';
+        $actions['retweet'] = '<a class="stream-item-action twitter-share-button" rel="nofollow" href="http://twitter.com/share?text=' . $tweet_text . '&via=' . $this->profile->user . '&url=&count=none">Tweet</a>';
         return $actions;
     }
 

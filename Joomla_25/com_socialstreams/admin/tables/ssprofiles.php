@@ -40,9 +40,6 @@ class SocialStreamsTableSsProfiles extends JTable {
      * @since 1.5
      */
     public function bind($array, $ignore = array()) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsTableSsProfiles::bind'));
         if (isset($array['profile'])) {
             // Check and prepare the Parameters data
             $registry = new JRegistry();
@@ -62,9 +59,6 @@ class SocialStreamsTableSsProfiles extends JTable {
      * @param boolean $updateNulls True to update fields even if they are null.
      */
     function store($updateNulls = false) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsTableSsProfiles::store'));
         if (empty($this->id)) {
             // New Row - Store the row
             parent::store($updateNulls);

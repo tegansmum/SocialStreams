@@ -24,10 +24,6 @@ class SocialStreamsModelSocialStream extends JModelAdmin {
      * @since   11.1
      */
     public function save($data) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelSocialStream::save'));
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($data, true)));
         $table = $this->getTable();
         $key = $table->getKeyName();
         $pk = (!empty($data[$key])) ? $data[$key] : (int) $this->getState($this->getName() . '.id');
@@ -99,26 +95,11 @@ class SocialStreamsModelSocialStream extends JModelAdmin {
         return 'administrator/components/com_socialstreams/models/forms/socialstream_auth.js';
     }
 
-    public function setAuth($network) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelSocialStream::setAuth'));
-
+    public function setAuth($network, $id='') {
         JLoader::import('components.com_socialstreams.helpers.socialstreams', JPATH_ADMINISTRATOR);
-        $data = array(
-            'network' => $network,
-            'access_token' => '',
-            'expires' => JFactory::getDate()->toMySQL(),
-            'state' => 0
-        );
         // Get the Oauth API Object
-        if ($api = SocialStreamsHelper::getApi($network)) {
-//            $data['access_token'] = $api->access_token;
-//            $data['expires'] = $api->access_token_expiry ? JFactory::getDate($api->access_token_expiry)->toMySQL() : JFactory::getDate(now() + (60 * 60 * 24 * 60))->toMySQL();
-//            $data['state'] = 
-//            if ($api->access_token_secret != '')
-//                $data['access_token_secret'] = $api->access_token_secret;
-            $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r(get_object_vars($api), true)));
+        if (!$api = SocialStreamsHelper::getApi($network)) {
+            SocialStreamsHelper::log(get_object_vars($api));
         }
 //        $this->save($data);
         return empty($api->access_token) ? false : true;

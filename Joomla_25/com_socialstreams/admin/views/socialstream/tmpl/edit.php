@@ -24,7 +24,7 @@ JHtml::_('behavior.formvalidation');
                         <?php echo $field->input; ?>
                     <?php endif; ?>
                 <?php endforeach; ?>
-                <?php if ($this->form->getValue('network') && $this->form->getValue('clientid')): ?>
+                <?php if ($this->form->getValue('network')): ?>
                     <li><?php
                 echo $this->form->getLabel('access_token', 'request');
                 echo $this->form->getInput('access_token', 'request');

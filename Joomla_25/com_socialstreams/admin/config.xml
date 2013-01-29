@@ -9,6 +9,7 @@ and open the template in the editor.
 	<field name="stored_connections" type="text" default="20" label="Stored Connections" description="The number of connection profiles from each Social Network to store locally" size="3" />
 	<field name="item_period" type="text" default="3600" label="Item Cache Refresh Time (secs)" description="The number of seconds before the Item Cache will be refreshed. Default is 1 hour" size="6" />
 	<field name="profile_period" type="text" default="86400" label="Profile Cache Refresh Time (secs)" description="The number of seconds before the Profile Cache will be refreshed. Default is 24 hours" size="6" />
+	<field name="debug" type="checkbox" default="0" value="1" label="Debug?" description="Record API requests and other debug data to the error log. Caution the error log will become quite large if left on for a long time." />
     </fieldset>
     <fieldset name="facebook_options" label="COM_SOCIALSTREAMS_CONFIG_FACEBOOK_LABEL" description="COM_SOCIALSTREAMS_CONFIG_FACEBOOK_DESCRIPTION">
 	<field name="facebook_nicename" type="hidden" default="Facebook" />

@@ -4,107 +4,6 @@
  * and open the template in the editor.
  */
 
-function appsol_social_streams_create_menu() {
-    $page = add_plugins_page('Social Streams Settings', 'Social Streams', 'manage_options', 'appsol_social_streams', 'appsol_social_streams_options');
-//    add_action('admin_print_styles-' . $page, 'appsol_social_streams_admin_resources');
-}
-
-function appsol_social_streams_register_settings() {
-    // Add the Social Straems Settings sections
-    add_settings_section('social_streams_general', 'General Settings', 'appsol_social_streams_general', 'appsol_social_streams');
-    add_settings_section('social_streams_facebook', 'Facebook Settings', 'appsol_social_streams_facebook', 'appsol_social_streams');
-    add_settings_section('social_streams_twitter', 'Twitter Settings', 'appsol_social_streams_twitter', 'appsol_social_streams');
-    add_settings_section('social_streams_linkedin', 'LinkedIn Settings', 'appsol_social_streams_linkedin', 'appsol_social_streams');
-    add_settings_section('social_streams_google', 'Google+ Settings', 'appsol_social_streams_google', 'appsol_social_streams');
-    add_settings_section('social_streams_instagram', 'Instagram Settings', 'appsol_social_streams_instagram', 'appsol_social_streams');
-    // General Settings
-    add_settings_field('socialstreams_networks', 'Networks', 'appsol_social_streams_hidden_field', 'appsol_social_streams', 'social_streams_general', array('label_for' => 'socialstreams_networks', 'default' => 'facebook,twitter,linkedin,google,instagram,flickr,foursquare', 'description' => ''));
-    register_setting('social_streams_general', 'socialstreams_networks');
-    add_settings_field('social_streams_stored_connections', 'Stored Connections', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_general', array('label_for' => 'social_streams_stored_connections', 'default' => '20', 'description' => 'The number of connection profiles from each Social Network to store locally'));
-    register_setting('social_streams_general', 'social_streams_stored_connections');
-    add_settings_field('social_streams_stored_items', 'Stored Items', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_general', array('label_for' => 'social_streams_stored_items', 'default' => '20', 'description' => 'The number of update items from each Social Network to store locally'));
-    register_setting('social_streams_twitter', 'social_streams_stored_items');
-    add_settings_field('social_streams_item_period', 'Item Cache Refresh Time (secs)', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_general', array('label_for' => 'social_streams_item_period', 'default' => '3600', 'description' => 'The number of seconds before the Item Cache will be refreshed. Default is 1 hour'));
-    register_setting('social_streams_general', 'social_streams_item_period');
-    add_settings_field('social_streams_profile_period', 'Profile Cache Refresh Time (secs)', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_general', array('label_for' => 'social_streams_profile_period', 'default' => '86400', 'description' => 'The number of seconds before the Profile Cache will be refreshed. Default is 24 hours'));
-    register_setting('social_streams_general', 'social_streams_profile_period');
-    // Facebook Settings
-    add_settings_field('social_streams_facebook', 'Connect to Facebook', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_facebook', array('label_for' => 'social_streams_facebook', 'default' => '0', 'description' => 'Use updates and information from Facebook'));
-    register_setting('social_streams_facebook', 'social_streams_facebook');
-    add_settings_field('social_streams_facebook_appkey', 'Facebook App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_facebook', array('label_for' => 'social_streams_facebook_appkey', 'default' => '', 'description' => 'The App ID or AppKey taken from https://developers.facebook.com/apps'));
-    register_setting('social_streams_facebook', 'social_streams_facebook_appkey');
-    add_settings_field('social_streams_facebook_appsecret', 'Facebook App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_facebook', array('label_for' => 'social_streams_facebook_appsecret', 'default' => '', 'description' => 'The App Secret taken from https://developers.facebook.com/apps'));
-    register_setting('social_streams_facebook', 'social_streams_facebook_appsecret');
-    // Twitter Settings
-    add_settings_field('social_streams_twitter', 'Connect to Twitter', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_twitter', 'default' => '0', 'description' => 'Use updates and information from Twitter'));
-    register_setting('social_streams_twitter', 'social_streams_twitter');
-    add_settings_field('social_streams_twitter_appkey', 'Twitter App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_twitter_appkey', 'default' => '', 'description' => 'The App ID or AppKey taken from https://dev.twitter.com/apps'));
-    register_setting('social_streams_twitter', 'social_streams_twitter_appkey');
-    add_settings_field('social_streams_twitter_appsecret', 'Twitter App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_twitter_appsecret', 'default' => '', 'description' => 'The App Secret taken from https://dev.twitter.com/apps'));
-    register_setting('social_streams_twitter', 'social_streams_twitter_appsecret');
-    add_settings_field('social_streams_only_friends', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_only_friends', 'default' => '0', 'description' => 'Only show followers on Twitter who are followed back'));
-    register_setting('social_streams_twitter', 'social_streams_only_friends');
-    add_settings_field('social_streams_show_blocked', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_show_blocked', 'default' => '0', 'description' => 'Show Twitter Followers which have been blocked by the User on Twitter'));
-    register_setting('social_streams_twitter', 'social_streams_show_blocked');
-    add_settings_field('social_streams_trim_user', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_trim_user', 'default' => '0', 'description' => 'Only get basic details for each tweet author'));
-    register_setting('social_streams_twitter', 'social_streams_trim_user');
-    add_settings_field('social_streams_include_retweets', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_include_retweets', 'default' => '0', 'description' => 'Get native re-tweets if they exist'));
-    register_setting('social_streams_twitter', 'social_streams_include_retweets');
-    add_settings_field('social_streams_exclude_replies', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_exclude_replies', 'default' => '0', 'description' => 'Filter out reply tweets, may reduce the number of tweets shown as filtering occurs after tweets are retrieved'));
-    register_setting('social_streams_twitter', 'social_streams_exclude_replies');
-    add_settings_field('social_streams_include_entities', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_twitter', array('label_for' => 'social_streams_include_entities', 'default' => '1', 'description' => 'Get additional meta data about each tweet such as user mentions, hashtags and urls'));
-    register_setting('social_streams_twitter', 'social_streams_include_entities');
-    // LinkedIn Settings
-    add_settings_field('social_streams_linkedin', 'Connect to Linkedin', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin', 'default' => '0', 'description' => 'Use updates and information from LinkedIn'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin');
-    add_settings_field('social_streams_linkedin_appkey', 'LinkedIn App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_appkey', 'default' => '', 'description' => 'The App ID or AppKey taken from https://www.linkedin.com/secure/developer'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_appkey');
-    add_settings_field('social_streams_linkedin_appsecret', 'LinkedIn App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_appsecret', 'default' => '', 'description' => 'The App Secret taken from https://www.linkedin.com/secure/developer'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_appsecret');
-    add_settings_field('social_streams_linkedin_itemtype_shar', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_itemtype_shar', 'default' => '0', 'description' => 'LinkedIn Share updates are generated when a member shares or reshares an item'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_itemtype_shar');
-    add_settings_field('social_streams_linkedin_itemtype_stat', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_itemtype_stat', 'default' => '0', 'description' => 'LinkedIn Status Updates are the result of first degree connections setting their status'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_itemtype_stat');
-    add_settings_field('social_streams_linkedin_itemtype_virl', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_itemtype_virl', 'default' => '0', 'description' => 'LinkedIn Viral updates include comments and likes'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_itemtype_virl');
-    add_settings_field('social_streams_linkedin_itemtype_conn', '', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_linkedin', array('label_for' => 'social_streams_linkedin_itemtype_conn', 'default' => '0', 'description' => 'LinkedIn Connection Updates usually describe when a connection of the current member has made a new connection'));
-    register_setting('social_streams_linkedin', 'social_streams_linkedin_itemtype_conn');
-    // Google Plus Settings
-//    add_settings_field('social_streams_google', 'Connect to Google+', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_google', array('label_for' => 'social_streams_google', 'default' => '0', 'description' => 'Use updates and information from Google+'));
-//    register_setting('social_streams_google', 'social_streams_google');
-//    add_settings_field('social_streams_google_appkey', 'Google App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_google', array('label_for' => 'social_streams_google_appkey', 'default' => '', 'description' => 'The App ID or AppKey taken from https://code.google.com/apis/console'));
-//    register_setting('social_streams_google', 'social_streams_google_appkey');
-//    add_settings_field('social_streams_linkedin_appsecret', 'Google App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_google', array('label_for' => 'social_streams_linkedin_appsecret', 'default' => '', 'description' => 'The App Secret taken from https://code.google.com/apis/console'));
-//    register_setting('social_streams_google', 'social_streams_google_appsecret');
-//    add_settings_field('social_streams_google_appid', 'Google Client ID', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_google', array('label_for' => 'social_streams_google_appid', 'default' => '', 'description' => 'The Client ID taken from https://code.google.com/apis/console'));
-//    register_setting('social_streams_google', 'social_streams_google_appid');
-    // Instagram Settings
-    add_settings_field('social_streams_instagram', 'Connect to Instagram', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_instagram', array('label_for' => 'social_streams_instagram', 'default' => '0', 'description' => 'Use updates and information from Instagram'));
-    register_setting('social_streams_instagram', 'social_streams_instagram');
-    add_settings_field('social_streams_instagram_appkey', 'Instagram App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_instagram', array('label_for' => 'social_streams_instagram_appkey', 'default' => '', 'description' => 'The API Key taken from http://instagram.com/developer/clients/manage/'));
-    register_setting('social_streams_instagram', 'social_streams_instagram_appkey');
-    add_settings_field('social_streams_instagram_appsecret', 'Instagram App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_instagram', array('label_for' => 'social_streams_instagram_appsecret', 'default' => '', 'description' => 'The Client Secret taken from http://instagram.com/developer/clients/manage/'));
-    register_setting('social_streams_instagram', 'social_streams_instagram_appsecret');
-    // Foursquare Settings
-//    add_settings_field('social_streams_foursquare', 'Connect to Foursquare', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_foursquare', array('label_for' => 'social_streams_foursquare', 'default' => '0', 'description' => 'Use updates and information from Foursquare'));
-//    register_setting('social_streams_foursquare', 'social_streams_foursquare');
-//    add_settings_field('social_streams_foursquare_appkey', 'Foursquare App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_foursquare', array('label_for' => 'social_streams_foursquare_appkey', 'default' => '', 'description' => 'The API Key taken from https://foursquare.com/developers/apps'));
-//    register_setting('social_streams_foursquare', 'social_streams_foursquare_appkey');
-//    add_settings_field('social_streams_foursquare_appsecret', 'Foursquare App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_foursquare', array('label_for' => 'social_streams_foursquare_appsecret', 'default' => '', 'description' => 'The Client Secret taken from https://foursquare.com/developers/apps'));
-//    register_setting('social_streams_foursquare', 'social_streams_foursquare_appsecret');
-    // Flickr Settings
-//    add_settings_field('social_streams_flickr', 'Connect to Flickr', 'appsol_social_streams_yesno_field', 'appsol_social_streams', 'social_streams_flickr', array('label_for' => 'social_streams_flickr', 'default' => '0', 'description' => 'Use updates and information from Flickr'));
-//    register_setting('social_streams_flickr', 'social_streams_flickr');
-//    add_settings_field('social_streams_flickr_appkey', 'Flickr App Key', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_flickr', array('label_for' => 'social_streams_flickr_appkey', 'default' => '', 'description' => 'The API Key taken from http://www.flickr.com/services/'));
-//    register_setting('social_streams_flickr', 'social_streams_flickr_appkey');
-//    add_settings_field('social_streams_flickr_appsecret', 'Flickr App Secret', 'appsol_social_streams_text_field', 'appsol_social_streams', 'social_streams_flickr', array('label_for' => 'social_streams_flickr_appsecret', 'default' => '', 'description' => 'The Client Secret taken from http://www.flickr.com/services/'));
-//    register_setting('social_streams_flickr', 'social_streams_flickr_appsecret');
-    // Add the admin stylesheets
-    wp_register_style('appsol_social_streams_admin_css', plugins_url('css/admin.css', __FILE__));
-    wp_register_script('appsol_social_streams_admin_js', plugins_url('js/social_streams_admin.js', __FILE__), array('jquery', 'jquery-ui-dialog'));
-    appsol_social_streams_admin_resources();
-}
-
 /**
  * Text Field
  * @param type $args 
@@ -132,8 +31,32 @@ function appsol_social_streams_hidden_field($args) {
 function appsol_social_streams_yesno_field($args) {
     $setting = $args['label_for'];
     $option = get_option($setting) ? get_option($setting) : $args['default'];
-    echo '<input title="' . $args["description"] . '" type="radio" id="' . $setting . '_yes" name="' . $setting . '" value="1" ' . ($option ? 'checked="checked" ' : '') . '/>';
-    echo '<input title="' . $args["description"] . '" type="radio" id="' . $setting . '_no" name="' . $setting . '" value="0" ' . ($option ? '' : 'checked="checked" ') . '/>';
+    echo '<input title="' . $args["description"] . '" type="radio" id="' . $setting . '_yes" name="' . $setting . '" value="1" ' . ($option ? 'checked="checked" ' : '') . '/>Yes ';
+    echo '<input title="' . $args["description"] . '" type="radio" id="' . $setting . '_no" name="' . $setting . '" value="0" ' . ($option ? '' : 'checked="checked" ') . '/>No';
+}
+
+function appsol_social_streams_general_section() {
+    echo '<p>General settings around storing and retrieving updates.</p>';
+}
+
+function appsol_social_streams_facebook_section() {
+    echo '<p>Facebook settings</p>';
+}
+
+function appsol_social_streams_twitter_section() {
+    echo '<p>Twitter settings</p>';
+}
+
+function appsol_social_streams_linkedin_section() {
+    echo '<p>LinkedIn settings</p>';
+}
+
+function appsol_social_streams_google_section() {
+    echo '<p>Google+ settings</p>';
+}
+
+function appsol_social_streams_instagram_section() {
+    echo '<p>Instagram settings</p>';
 }
 
 /**
@@ -142,15 +65,8 @@ function appsol_social_streams_yesno_field($args) {
 function appsol_social_streams_networks() {
     ?>
     <form method="post" action="options.php"> 
-        <?php
-        settings_fields('social_streams_general');
-        $networks = get_option('socialstreams_networks');
-        if ($networks) {
-            $networks = explode(',', $networks);
-            foreach ($networks as $network)
-                settings_fields('social_streams_' . $network);
-        }
-        ?>
+        <?php settings_fields('appsol_social_streams'); ?>
+        <?php do_settings_sections('appsol_social_streams'); ?>
         <p class="submit">
             <input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
         </p>
@@ -163,64 +79,182 @@ function appsol_social_streams_networks() {
  * Allow a new account to be added 
  */
 function appsol_social_streams_accounts() {
-    $accounts = SocialStreamsHelper::getAuthenticatedNetworks();
+    $accounts = SocialStreamsHelper::getAuthenticatedAccounts();
+    SocialStreamsHelper::log($accounts);
     ?>
     <h3>Account details</h3>
-    <table class="form-table social-streams-accounts">
+    <form action="<?php echo SocialStreamsHelper::getBaseRedirectUrl(); ?>&tab=accounts" method="POST">
+        <?php wp_nonce_field(plugin_basename(__FILE__), 'appsol_social_streams_accounts_nonce'); ?>
+        <table class="form-table social-streams-accounts">
+            <tbody>
+                <tr>
+                    <th>Account ID</th>
+                    <th>Network</th>
+                    <th>User Name</th>
+                    <th>Account Status</th>
+                    <th>Authentication Expires</th>
+                    <th>Delete?</th>
+                </tr>
+                <?php
+                foreach ($accounts as $account):
+                    if ($profile = SocialStreamsProfileCache::getProfiles($account['network'], $account['clientid'], $account['clientid'])):
+                        ?>
+                        <tr>
+                            <td><?php echo $account['clientid']; ?></td>
+                            <td><?php echo $profile->nicename; ?></td>
+                            <td><?php echo $profile->name; ?></td>
+                            <td>
+                                <label for="social_streams_account_<?php echo $account['clientid']; ?>_status_yes"><input type="radio" id="social_streams_account_<?php echo $account['clientid']; ?>_status_yes" name="social_streams_account_status[<?php echo $account['clientid']; ?>]" value="1" <?php echo ($account['authorized'] ? 'checked="checked" ' : ''); ?>/>On</label>
+                                <label for="social_streams_account_<?php echo $account['clientid']; ?>_status_no"><input type="radio" id="social_streams_account_<?php echo $account['clientid']; ?>_status_no" name="social_streams_account_status[<?php echo $account['clientid']; ?>]" value="0" <?php echo ($account['authorized'] ? '' : 'checked="checked"'); ?>/>Off</label>
+                            </td>
+                            <td><?php echo $account['expiry']; ?></td>
+                            <td><input type="checkbox" id="social_streams_account_delete_<?php echo $account['clientid']; ?>" name="social_streams_account_delete[<?php echo $account['network']; ?>][]" value="<?php echo $account['clientid']; ?>" /></td>
+                        </tr>
+                        <?php
+                    endif;
+                endforeach;
+                ?>
+            </tbody>
+        </table>
+        <p class="submit">
+            <input type="submit" class="button-primary" value="<?php _e('Apply') ?>" />
+        </p>
+    </form>
+    <h3>New Account</h3>
+    <p>To authorise account access, you must be logged in or able to log in to the social network account you wish to connect to.</p>
+    <form action="<?php echo SocialStreamsHelper::getBaseRedirectUrl(); ?>&tab=accounts" method="POST">
+    <?php wp_nonce_field(plugin_basename(__FILE__), 'appsol_social_streams_accounts_nonce'); ?>
+        <input type="hidden" name="get_auth" value="1" />
+        <table class="form-table social-streams-new-account">
+            <tbody>
+                <tr>
+                    <th scope="row"><label for="social_streams_new_account">Select a Social Network</label></th>
+                    <td>
+                        <select id="social_streams_new_account" name="network">
+                            <option value="0">Select Network</option>
+                            <?php foreach (SocialStreamsHelper::getNetworks() as $network): ?>
+                                <option value="<?php echo $network; ?>"><?php echo ucfirst($network); ?></option>
+    <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="submit">
+            <input type="submit" class="button-primary" value="<?php _e('Connect') ?>" />
+        </p>
+    </form>
+    <?php
+}
+
+/**
+ * List the current stored profiles
+ */
+function appsol_social_streams_profiles() {
+    $filter = isset($_POST['social_network_filter']) ? $_POST['social_network_filter'] : '';
+    ?>
+    <h3>Connected Profiles</h3>
+    <form action="<?php echo SocialStreamsHelper::getBaseRedirectUrl(); ?>&tab=profiles" method="POST">
+    <?php wp_nonce_field(plugin_basename(__FILE__), 'appsol_social_streams_profiles_nonce'); ?>
+        <div class="tablenav top">
+            <div class="alignleft actions">
+                <select name="action">
+                    <option value="0">Bulk Actions</option>
+                    <option value="1">Refresh</option>
+                </select>
+                <input type="submit" name="" id="post-query-submit" class="button-secondary" value="Apply" />
+            </div>
+            <div class="alignleft actions">
+                <select name="social_network_filter">
+                    <option value="0">View all Networks</option>
+                    <?php $networks = SocialStreamsHelper::getNetworks(); ?>
+                    <?php foreach ($networks as $network): ?>
+                        <?php $selected = $network == $filter ? ' selected="selected"' : ''; ?>
+                        <option value="<?php echo $network; ?>"<?php echo $selected; ?>><?php echo ucfirst($network); ?></option>
+    <?php endforeach; ?>
+                </select>
+                <input type="submit" name="" id="post-query-submit" class="button-secondary" value="Filter" />
+            </div>
+        </div>
+    </form>
+    <table class="form-table social-streams-profiles">
         <tbody>
             <tr>
                 <th>Network</th>
-                <th>Account ID</th>
-                <th>User Name</th>
-                <th>Account Status</th>
-                <th>Authentication Expires</th>
+                <th>User</th>
+                <th>Name</th>
+                <th>Image</th>
+                <th>Expires</th>
             </tr>
-            <?php
-            foreach ($accounts as $account):
-                $transient_name = 'socialstreams_' . $accoun['network'] . '_profile_' . $account['clientid'];
-                if ($profile = get_transient($transient_name)):
-                    ?>
+            <?php foreach (SocialStreamsHelper::getAuthenticatedAccounts($filter) as $account): ?>
+                <?php foreach (SocialStreamsProfileCache::getProfiles($account['network'], $account['clientid']) as $profile): ?>
+            <?php SocialStreamsHelper::log($profile); ?>
                     <tr>
-                        <td><?php echo $profile->Nicename; ?></td>
-                        <td><?php echo $account['clientid']; ?></td>
+                        <td><?php echo $profile->nicename; ?></td>
+                        <td><?php echo $profile->user; ?></td>
                         <td><?php echo $profile->name; ?></td>
-                        <td>
-                            <label for="social_streams_account_<?php echo $account['clientid']; ?>_status_yes"><input type="radio" id="social_streams_account_<?php echo $account['clientid']; ?>_status_yes" name="social_streams_account_<?php echo $account['clientid']; ?>_status" value="1" <?php echo ($account['authorized'] ? 'checked="checked" ' : ''); ?>/>On</label>
-                            <label for="social_streams_account_<?php echo $account['clientid']; ?>_status_yes"><input type="radio" id="social_streams_account_<?php echo $account['clientid']; ?>_status_no" name="social_streams_account_<?php echo $account['clientid']; ?>_status" value="0" <?php echo ($account['authorized'] ? '' : 'checked="checked"'); ?>/>Off</label>
-                        </td>
-                        <td><?php echo $account['expiry']; ?></td>
+                        <td><img width="40" height="40" src="<?php echo $profile->image; ?>" /></td>
+                        <td><?php echo $profile->expires; ?></td>
                     </tr>
-                <?php
-                endif;
-            endforeach;
-            ?>
+                <?php endforeach; ?>
+    <?php endforeach; ?>
         </tbody>
     </table>
-    <h3>New Account</h3>
-    <table class="form-table social-streams-new-account">
-        <tbody>
-        <form action="<?php get_admin_url(); ?>plugins.php?page=appsol_social_streams" method="GET">
-            <input type="hidden" name="action" value="appsol_social_streams_get_auth" />
-            <tr>
-                <th scope="row">Authorise Account Access</th>
-                <td>
-                    <label for="social_streams_new_account">Select a Social Network</label>
-                    <select id="social_streams_new_account" name="social_streams_new_account">
-                        <option value="0">Select Network</option>
-                        <?php foreach (SocialStreamsHelper::getNetworks() as $network): ?>
-                            <option value="<?php echo $network; ?>"><?php echo ucfirst($network); ?></option>
+    <?php
+}
+
+/**
+ * List the current stored items
+ */
+function appsol_social_streams_items() {
+    $filter = isset($_POST['social_network_filter']) ? $_POST['social_network_filter'] : '';
+    ?>
+    <h3>Network Updates</h3>
+    <form action="<?php echo SocialStreamsHelper::getBaseRedirectUrl(); ?>&tab=items" method="POST">
+    <?php wp_nonce_field(plugin_basename(__FILE__), 'appsol_social_streams_items_nonce'); ?>
+        <div class="tablenav top">
+            <div class="alignleft actions">
+                <select name="action">
+                    <option value="0">Bulk Actions</option>
+                    <option value="1">Refresh</option>
+                </select>
+                <input type="submit" name="" id="post-query-submit" class="button-secondary" value="Apply" />
+            </div>
+            <div class="alignleft actions">
+                <select name="social_network_filter">
+                    <option value="0">View all Networks</option>
+                    <?php $networks = SocialStreamsHelper::getNetworks(); ?>
+                    <?php foreach ($networks as $network): ?>
+                        <?php $selected = $network == $filter ? ' selected="selected"' : ''; ?>
+                        <option value="<?php echo $network; ?>"<?php echo $selected; ?>><?php echo ucfirst($network); ?></option>
     <?php endforeach; ?>
-                    </select>
-                </td>
-                <td>
-                    <p class="submit">
-                        <input type="submit" class="button-primary" value="<?php _e('Connect') ?>" />
-                    </p>
-                </td>
-            </tr>
-            </tbody>
-    </table>
+                </select>
+                <input type="submit" name="" id="post-query-submit" class="button-secondary" value="Filter" />
+            </div>
+        </div>
     </form>
+    <table class="form-table social-streams-items">
+        <tbody>
+            <tr>
+                <th>Network</th>
+                <th>Name</th>
+                <th>Update</th>
+                <th>Published</th>
+                <th>Expires</th>
+            </tr>
+            <?php foreach (SocialStreamsHelper::getAuthenticatedAccounts($filter) as $account): ?>
+        <?php foreach (SocialStreamsItemCache::getItems($account['network'], $account['clientid']) as $item): ?>
+                    <tr>
+                        <td><?php echo $item->nicename; ?></td>
+                        <td><?php echo $item->profile->name; ?></td>
+                        <td><?php echo $item->display(); ?></td>
+                        <td><?php echo $item->published; ?></td>
+                        <td><?php echo $item->expires; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+    <?php endforeach; ?>
+        </tbody>
+    </table>
     <?php
 }
 
@@ -232,10 +266,11 @@ function appsol_social_streams_options() {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     if (!session_id())
-        session_start();
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'facebook';
+        @session_start();
+    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'networks';
     ?>
     <div class="wrap">
+        <div class="icon32" id="icon-options-general"><br></div>
         <h2>Social Streams</h2>
         <h2 class="nav-tab-wrapper">
             <a href="<?php get_admin_url(); ?>plugins.php?page=appsol_social_streams&tab=networks" class="nav-tab<?php echo $active_tab == 'networks' ? ' nav-tab-active' : ''; ?>">Networks</a>
@@ -247,16 +282,31 @@ function appsol_social_streams_options() {
         <?php
         switch ($active_tab) {
             case 'networks':
-
+                appsol_social_streams_networks();
                 break;
-            case 'auth':
-
+            case 'accounts':
+                if (isset($_POST['social_streams_account_delete']) && count($_POST['social_streams_account_delete'])) {
+                    foreach ($_POST['social_streams_account_delete'] as $network => $clients) {
+                        foreach ($clients as $client_id) {
+                            appsolSocialStreams::remove_auth($network, $client_id);
+                        }
+                    }
+                }
+                appsol_social_streams_accounts();
                 break;
             case 'profiles':
-
+                if (isset($_POST['action']) && $_POST['action'] == 1) {
+                    $network = isset($_POST['social_network_filter']) ? $_POST['social_network_filter'] : '';
+                    SocialStreamsProfileCache::refresh(true, $network);
+                }
+                appsol_social_streams_profiles();
                 break;
             case 'items':
-
+                if (isset($_POST['action']) && $_POST['action'] == 1) {
+                    $network = isset($_POST['social_network_filter']) ? $_POST['social_network_filter'] : '';
+                    SocialStreamsItemCache::refresh(true, $network);
+                }
+                appsol_social_streams_items();
                 break;
         }
         ?>

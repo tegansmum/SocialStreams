@@ -38,10 +38,6 @@ class JFormFieldNetworkConnect extends JFormField {
         }
         $script[] = implode(",\n", $urls);
         $script[] = '}';
-//        $script[] = 'function jSetAuth_' . $this->id . '(network, success) {';
-//        $script[] = '    document.id("jform_message").value = success? "Authentication Successful" : "Authentication Failed";';
-//        $script[] = '    SqueezeBox.close();';
-//        $script[] = '}';
         $script[] = 'window.addEvent("domready", function(){';
         $script[] = '   var network = document.getElementById("jform_network").value';
         $script[] = '   if(network != 0){';
@@ -72,8 +68,6 @@ class JFormFieldNetworkConnect extends JFormField {
         } else {
             $value = $this->value;
         }
-
-//        $html[] = '<input type="hidden" id="' . $this->id . '_id"' . ' name="' . $this->name . '" value="' . $value . '" />';
 
         return implode("\n", $html);
     }

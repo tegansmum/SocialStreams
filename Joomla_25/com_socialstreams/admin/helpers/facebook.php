@@ -13,44 +13,28 @@ class facebookHelper {
     public static $client;
     public static $server = 'Facebook';
     public static $redirect_uri = '';
-    public static $scope = 'read_stream,publish_stream';
+    public static $scope = 'read_stream,publish_stream,manage_pages';
     public static $last_error = '';
-    public static $debug = 1;
 
     public static function setup($userid = null) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'facebookHelper::setup'));
         self::$client = new SocialStreamsFacebook();
         self::$client->user = $userid;
-        self::$client->debug = self::$debug;
         self::$client->server = self::$server;
         self::$client->scope = self::$scope;
-        self::$client->redirect_uri = JURI::base() . 'index.php?option=com_socialstreams&task=socialstream.setauth&network=facebook';
+        self::$client->redirect_uri = SocialStreamsHelper::getAuthRedirectUrl() . '&network=facebook';
 
-        $jparams = JComponentHelper::getParams('com_socialstreams');
-
-        if (strlen($jparams->get('facebook_appkey')) == 0 || strlen($jparams->get('facebook_appsecret')) == 0)
+        if (strlen(SocialStreamsHelper::getParameter('facebook_appkey')) == 0 || strlen(SocialStreamsHelper::getParameter('facebook_appsecret')) == 0)
             return false;
-        self::$client->client_id = $jparams->get('facebook_appkey');
-        self::$client->client_secret = $jparams->get('facebook_appsecret');
+        self::$client->client_id = SocialStreamsHelper::getParameter('facebook_appkey');
+        self::$client->client_secret = SocialStreamsHelper::getParameter('facebook_appsecret');
 
-        if ($success = self::$client->Initialize()) {
-            if ($success = self::$client->Process()) {
-                if (strlen(self::$client->access_token)) {
-                    $success = self::$client->CallAPI(
-                            'https://graph.facebook.com/me', 'GET', array(), array('FailOnAccessError' => true), $user);
-                }
-            }
-            $success = self::$client->Finalize($success);
-        }
-        if (self::$client->exit) {
-            $app = JFactory::getApplication();
-            $app->close();
-        }
-        if ($success)
-            return self::$client;
-        return false;
+        $user = self::$client->Bootstrap();
+
+        // Look for managed pages, but only if this is not a page
+        if ($user && (isset($user->profile->first_name) || isset($user->profile->last_name)))
+            self::$client->getPages();
+
+        return $user ? self::$client : false;
     }
 
 }
@@ -63,10 +47,13 @@ class SocialStreamsFacebook extends SocialStreamsApi {
         return 'facebook';
     }
 
+    public function getTokenLifetime() {
+        return 60 * 60 * 24 * 60;
+    }
+
     public function getProfile($id = 'me') {
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . $id, 'GET', array(), array('FailOnAccessError' => true), $user);
-
         $success = $this->Finalize($success);
 
         if ($success) {
@@ -77,21 +64,17 @@ class SocialStreamsFacebook extends SocialStreamsApi {
         return false;
     }
 
-    public function getConnectedProfiles() {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFacebook::getConnectedProfiles'));
+    public function getConnectedProfiles(&$friend_count) {
         $my_friends = array();
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . $this->user . '/friends', 'GET', array(), array('FailOnAccessError' => true), $friends);
-
         $success = $this->Finalize($success);
+
         if ($success) {
             $show_friends = array();
-            $friend_total = count($friends->data);
-            $jparams = JComponentHelper::getParams('com_socialstreams');
-            $stored_connections = $jparams->get('stored_connections');
-            $show_friends = $friend_total > $stored_connections ?
+            $friend_count = count($friends->data);
+            $stored_connections = SocialStreamsHelper::getParameter('stored_connections');
+            $show_friends = $friend_count > $stored_connections ?
                     array_rand($friends->data, $stored_connections) : array_keys($friends->data);
             foreach ($show_friends as $friend_id) {
                 $friend = $this->getProfile($friends->data[$friend_id]->id);
@@ -102,15 +85,11 @@ class SocialStreamsFacebook extends SocialStreamsApi {
     }
 
     public function getItems() {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFacebook::getItems'));
         $my_feed = array();
         if (strlen($this->access_token))
             $success = self::CallAPI($this->api_url . $this->user . '/feed', 'GET', array(), array('FailOnAccessError' => true), $feed);
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($feed, true)));
-
         $success = $this->Finalize($success);
+
         if ($success) {
             foreach ($feed->data as $post) {
                 if (isset($post->privacy) && $post->privacy->value == 'EVERYONE') {
@@ -124,15 +103,41 @@ class SocialStreamsFacebook extends SocialStreamsApi {
 
         return false;
     }
-    
-    public function getStats(){
-        
+
+    public function getPages() {
+        if (strlen($this->access_token))
+            $success = $this->CallAPI($this->api_url . 'me/accounts', 'GET', array(), array('FailOnAccessError' => true), $pages);
+        $success = $this->Finalize($success);
+        if ($success) {
+            foreach ($pages->data as $page) {
+                if ($page->category == 'Application')
+                    continue;
+                $data = array(
+                    'network' => $this->getNetwork(),
+                    'clientid' => $page->id,
+                    'access_token' => $page->access_token,
+                    'access_token_secret' => '',
+                    'expires' => date('Y-m-d H:i:s', time() + (60 * 60 * 24 * 60)),
+                    'params' => array(
+                        'type' => 'page',
+                        'name' => $page->name,
+                        'category' => $page->category,
+                        'permissions' => $page->perms),
+                    'state' => 1
+                );
+                $success = SocialStreamsHelper::storeAuth($data);
+                if ($success)
+                    if ($profile = $this->getProfile($page->id))
+                        SocialStreamsHelper::storeProfile($page->id, $profile);
+            }
+        }
+        return $success;
     }
 
 }
 
 /**
- * Coomon interface to a Facebook Profile object 
+ * Common interface to a Facebook Profile object 
  */
 class SocialStreamsFacebookProfile extends SocialStreamsProfile {
 
@@ -142,25 +147,28 @@ class SocialStreamsFacebookProfile extends SocialStreamsProfile {
         parent::__construct($wraptag);
     }
 
-    public function setProfile($profile) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFacebookProfile::setProfile'));
-//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($profile, true)));
+    public function getConnectVerb() {
+        return 'follow';
+    }
+
+    public function setProfile($profile, $short = false) {
         $profile_image = 'http://graph.facebook.com/' . $profile->id . '/picture?type=square';
         $this->networkid = $profile->id;
         $this->user = isset($profile->username) ? $profile->username : '';
         $this->name = $profile->name;
         $this->url = isset($profile->link) ? $profile->link : '';
         $this->image = $profile_image;
-        if (isset($profile->profile))
-            $this->profile = json_decode($profile->profile);
-        elseif (is_object($profile))
-            $this->profile = $profile;
+        if (!$short) {
+            if (isset($profile->profile))
+                $this->profile = json_decode($profile->profile);
+            elseif (is_object($profile))
+                $this->profile = $profile;
+        }
     }
-    
-    public function store(){
-        return get_object_vars($this);
+
+    public function getStats() {
+        $connections = isset($this->profile->likes) ? $this->profile->likes : $this->profile->connections;
+        return array('name' => 'likes', 'count' => $connections);
     }
 
 }
@@ -173,12 +181,11 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
         parent::__construct($wraptag);
     }
 
-    function setUpdate($post, $fb_user = null) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsFacebookItem::setUpdate'));
-//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'Post -> ' . print_r($post, true)));
+    public function getPromoteVerb() {
+        return 'like';
+    }
 
+    function setUpdate($post, $fb_user = null) {
         $this->networkid = $post->id;
         // Is this a stored Post from the DB or from the API?
         if (isset($post->item)) {
@@ -186,26 +193,19 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
             $this->item = json_decode($post->item);
             if (isset($post->profile)) {
                 $this->profile = new SocialStreamsFacebookProfile();
-                $this->profile->setProfile($post->profile);
+                $this->profile->setProfile(json_decode($post->profile), true);
             }
         } elseif (is_object($post)) {
             // Fresh Post from API
             $this->item = $post;
-            $this->profile = new SocialStreamsFacebookProfile();
-            $this->profile->setProfile(isset($post->profile) ? $post->profile : $post->from);
+            if (!$this->setProfile($post->from->id)) {
+                $this->profile = new SocialStreamsFacebookProfile();
+                $this->profile->setProfile($post->from, true);
+            }
         }
-        $this->published = JFactory::getDate(strtotime($post->created_time))->toMySQL();
-    }
-
-    function store() {
-        $array = array(
-            'network' => $this->network,
-            'profile' => $this->profile,
-            'networkid' => $this->networkid,
-            'published' => $this->published,
-            'item' => $this->item
-        );
-        return $array;
+//        if (strpos($this->networkid, $this->profile->networkid) !== false)
+//            $this->networkid = substr($this->networkid, strlen($this->profile->networkid) + 1);
+        $this->published = date('Y-m-d H:i:s', strtotime($post->created_time));
     }
 
     function styleUpdate() {
@@ -261,9 +261,6 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
     }
 
     function getUpdateActions() {
-//        jimport('joomla.error.log');
-//        $errorLog = & JLog::getInstance();
-//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'appsolFacebookItem::setUpdateActions'));
         $allowed_actions = array('like', 'comment');
         $actions = array();
         foreach ($this->item->actions as $action) {
@@ -282,5 +279,3 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
     }
 
 }
-
-?>

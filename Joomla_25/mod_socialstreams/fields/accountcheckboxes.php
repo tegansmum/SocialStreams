@@ -93,11 +93,10 @@ class JFormFieldAccountCheckboxes extends JFormField {
         foreach ($networks as $network) {
             // Create a new option object based on the <option /> element.
             $tmp = JHtml::_(
-                            'select.option', (string) $network['id'], trim((string) $network['network']), 'value', 'text', ((string) !empty($network['access_token']))
+                            'select.option', (string) $network['id'], (string) $network['name'], 'value', 'text', empty($network['access_token'])
             );
             $options[] = $tmp;
         }
-        $options = array_merge(parent::getOptions(), $options);
 
         return $options;
     }

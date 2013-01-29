@@ -22,11 +22,22 @@ class SocialStreamsModelItem extends JModelAdmin {
      *
      * @since   11.1
      */
-    public function save($data) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelItem::save'));
-//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($data, true)));
+    public function save($clientid, $data) {
+        if(is_object($data)){
+            $store = array(
+                'id' => isset($data->id)? $data->id : '',
+                'network' => $data->network,
+                'networkid' => $data->networkid,
+                'profile_id' => $data->user,
+                'published' => date('Y-m-d H:i:s', strtotime($data->published)),
+                'item' => $data->item,
+                'profile' => $data->profile,
+                'expires' => $data->expires,
+                'created' => $data->created
+            );
+            $data = $store;
+        }
+        $data['client_id'] = $clientid;
         if (is_object($data['profile'])) {
             // Find the associated Profile
             $profile = $this->getTable('ssprofiles');
@@ -118,9 +129,6 @@ class SocialStreamsModelItem extends JModelAdmin {
     }
 
     function refresh($force = false) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelItem::refresh'));
         JLoader::import('components.com_socialstreams.helpers.socialstreams', JPATH_ADMINISTRATOR);
         $new = 0;
         // Load the authenticated networks into an array and randomise it
@@ -133,22 +141,19 @@ class SocialStreamsModelItem extends JModelAdmin {
             
             // If there are no items for this network then it will need fetching
             $item_ids = $this->getItemIds($network['id']);
-            $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'All: ' . print_r($item_ids, true)));
+
             // If items existed for this network, then look for out of date ones
             $expired_item_ids = array();
-            if (count($item_ids) && !$force){
+            if (count($item_ids) && !$force)
                 $expired_item_ids = $this->getItemIds($network['id'], true);
-                $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'Expired: ' . print_r($expired_item_ids, true)));
-            }
+
             if (!count($item_ids) || count($expired_item_ids) || $force) {
 
                 if ($api = SocialStreamsHelper::getApi($network['network'], $network['clientid'])) {
                     if ($items = $api->getItems($network['clientid'])) {
                         $new = $new? $new + count($items) : count($items);
                         foreach ($items as $item) {
-                            $save_item = $item->store();
-                            $save_item['client_id'] = $network['id'];
-                            if (!$this->getInstance('item', 'SocialStreamsModel')->save($save_item))
+                            if (!$this->getInstance('item', 'SocialStreamsModel')->save($network['id'], $item->store()))
                                 JError::raiseWarning('500', 'Failed to Save Item ' . $item->networkid . ' for Client ID ' . $network['clientid'] . ' on Network ' . $network['network']);
                         }
                     }

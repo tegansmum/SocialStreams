@@ -1,6 +1,5 @@
 <?php
 
-defined('_JEXEC') or die('Restricted access');
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -23,7 +22,7 @@ class facebookHelper {
         self::$client->debug = self::$debug;
         self::$client->server = self::$server;
         self::$client->scope = self::$scope;
-        self::$client->redirect_uri = JURI::base() . 'index.php?option=com_socialstreams&task=socialstream.setauth&network=facebook';
+        self::$client->redirect_uri = SocialStreamsHelper::getAuthRedirectUrl() . '&network=facebook';
 
         if (strlen(SocialStreamsHelper::getParameter('facebook_appkey')) == 0 || strlen(SocialStreamsHelper::getParameter('facebook_appsecret')) == 0)
             return false;
@@ -33,10 +32,10 @@ class facebookHelper {
         $user = self::$client->Bootstrap();
 
         // Look for managed pages, but only if this is not a page
-        if($user && (isset($user->profile->first_name) || isset($user->profile->last_name)))
+        if ($user && (isset($user->profile->first_name) || isset($user->profile->last_name)))
             self::$client->getPages();
 
-        return $success ? self::$client : false;
+        return $user ? self::$client : false;
     }
 
 }
@@ -56,7 +55,6 @@ class SocialStreamsFacebook extends SocialStreamsApi {
     public function getProfile($id = 'me') {
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . $id, 'GET', array(), array('FailOnAccessError' => true), $user);
-        SocialStreamsHelper::log($user);
         $success = $this->Finalize($success);
 
         if ($success) {
@@ -67,17 +65,17 @@ class SocialStreamsFacebook extends SocialStreamsApi {
         return false;
     }
 
-    public function getConnectedProfiles() {
+    public function getConnectedProfiles(&$friend_count) {
         $my_friends = array();
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . $this->user . '/friends', 'GET', array(), array('FailOnAccessError' => true), $friends);
-        SocialStreamsHelper::log($friends);
         $success = $this->Finalize($success);
+
         if ($success) {
             $show_friends = array();
-            $friend_total = count($friends->data);
+            $friend_count = count($friends->data);
             $stored_connections = SocialStreamsHelper::getParameter('stored_connections');
-            $show_friends = $friend_total > $stored_connections ?
+            $show_friends = $friend_count > $stored_connections ?
                     array_rand($friends->data, $stored_connections) : array_keys($friends->data);
             foreach ($show_friends as $friend_id) {
                 $friend = $this->getProfile($friends->data[$friend_id]->id);
@@ -91,8 +89,8 @@ class SocialStreamsFacebook extends SocialStreamsApi {
         $my_feed = array();
         if (strlen($this->access_token))
             $success = self::CallAPI($this->api_url . $this->user . '/feed', 'GET', array(), array('FailOnAccessError' => true), $feed);
-        SocialStreamsHelper::log($feed);
         $success = $this->Finalize($success);
+
         if ($success) {
             foreach ($feed->data as $post) {
                 if (isset($post->privacy) && $post->privacy->value == 'EVERYONE') {
@@ -110,18 +108,17 @@ class SocialStreamsFacebook extends SocialStreamsApi {
     public function getPages() {
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . 'me/accounts', 'GET', array(), array('FailOnAccessError' => true), $pages);
-        SocialStreamsHelper::log($pages);
         $success = $this->Finalize($success);
         if ($success) {
             foreach ($pages->data as $page) {
-                if($page->category == 'Application')
+                if ($page->category == 'Application')
                     continue;
                 $data = array(
                     'network' => $this->getNetwork(),
                     'clientid' => $page->id,
                     'access_token' => $page->access_token,
                     'access_token_secret' => '',
-                    'expires' => JFactory::getDate(time() + (60 * 60 * 24 * 60))->toMySQL(),
+                    'expires' => date('Y-m-d H:i:s', time() + (60 * 60 * 24 * 60)),
                     'params' => array(
                         'type' => 'page',
                         'name' => $page->name,
@@ -129,19 +126,20 @@ class SocialStreamsFacebook extends SocialStreamsApi {
                         'permissions' => $page->perms),
                     'state' => 1
                 );
-                SocialStreamsHelper::storeAuth($data);
+                $success = SocialStreamsHelper::storeAuth($data);
+                if ($success)
+                    if ($profile = $this->getProfile($page->id))
+                        $stored_profile =
+                                SocialStreamsProfileCache::save($page->id, $profile->store());
             }
         }
-    }
-
-    public function getStats() {
-        
+        return $success;
     }
 
 }
 
 /**
- * Coomon interface to a Facebook Profile object 
+ * Common interface to a Facebook Profile object 
  */
 class SocialStreamsFacebookProfile extends SocialStreamsProfile {
 
@@ -151,21 +149,28 @@ class SocialStreamsFacebookProfile extends SocialStreamsProfile {
         parent::__construct($wraptag);
     }
 
-    public function setProfile($profile) {
+    public function getConnectVerb() {
+        return 'follow';
+    }
+
+    public function setProfile($profile, $short = false) {
         $profile_image = 'http://graph.facebook.com/' . $profile->id . '/picture?type=square';
         $this->networkid = $profile->id;
         $this->user = isset($profile->username) ? $profile->username : '';
         $this->name = $profile->name;
         $this->url = isset($profile->link) ? $profile->link : '';
         $this->image = $profile_image;
-        if (isset($profile->profile))
-            $this->profile = json_decode($profile->profile);
-        elseif (is_object($profile))
-            $this->profile = $profile;
+        if (!$short) {
+            if (isset($profile->profile))
+                $this->profile = json_decode($profile->profile);
+            elseif (is_object($profile))
+                $this->profile = $profile;
+        }
     }
 
-    public function store() {
-        return get_object_vars($this);
+    public function getStats() {
+        $connections = isset($this->profile->likes) ? $this->profile->likes : $this->profile->connections;
+        return array('name' => 'likes', 'count' => $connections);
     }
 
 }
@@ -178,6 +183,10 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
         parent::__construct($wraptag);
     }
 
+    public function getPromoteVerb() {
+        return 'like';
+    }
+
     function setUpdate($post, $fb_user = null) {
         $this->networkid = $post->id;
         // Is this a stored Post from the DB or from the API?
@@ -186,26 +195,19 @@ class SocialStreamsFacebookItem extends SocialStreamsItem {
             $this->item = json_decode($post->item);
             if (isset($post->profile)) {
                 $this->profile = new SocialStreamsFacebookProfile();
-                $this->profile->setProfile($post->profile);
+                $this->profile->setProfile($post->profile, true);
             }
         } elseif (is_object($post)) {
             // Fresh Post from API
             $this->item = $post;
-            $this->profile = new SocialStreamsFacebookProfile();
-            $this->profile->setProfile(isset($post->profile) ? $post->profile : $post->from);
+            if (!$this->setProfile($post->from->id)) {
+                $this->profile = new SocialStreamsFacebookProfile();
+                $this->profile->setProfile($post->from, true);
+            }
         }
-        $this->published = JFactory::getDate(strtotime($post->created_time))->toMySQL();
-    }
-
-    function store() {
-        $array = array(
-            'network' => $this->network,
-            'profile' => $this->profile,
-            'networkid' => $this->networkid,
-            'published' => $this->published,
-            'item' => $this->item
-        );
-        return $array;
+        if (strpos($this->networkid, $this->profile->networkid) !== false)
+            $this->networkid = substr($this->networkid, strlen($this->profile->networkid) + 1);
+        $this->published = date('Y-m-d H:i:s', strtotime($post->created_time));
     }
 
     function styleUpdate() {

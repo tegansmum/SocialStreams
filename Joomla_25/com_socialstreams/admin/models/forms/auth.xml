@@ -26,14 +26,15 @@ and open the template in the editor.
 	
 	<field name="clientid"
 	       type="text" 
-	       default="" 
+	       readonly="true" 
+	       class="readonly"
 	       label="COM_SOCIALSTREAMS_FIELD_CLIENTID_LABEL" 
-	       class="inputbox"
 	       description="COM_SOCIALSTREAMS_FIELD_CLIENTID_DESC" 
 	       size="84" />
+	       
 	<field name="state" type="list" label="JSTATUS"
 	       description="JFIELD_PUBLISHED_DESC" class="inputbox"
-	       filter="intval" size="1" default="1"
+	       filter="intval" size="1" default="0"
 	>
 	    <option value="1">
 		JPUBLISHED
@@ -48,14 +49,6 @@ and open the template in the editor.
 		JTRASHED
 	    </option>
 	</field>
-	<field name="access_token" 
-	       type="text" 
-	       default="" 
-	       label="COM_SOCIALSTREAMS_FIELD_MESSAGE_LABEL" 
-	       class="inputbox readonly"
-	       description="COM_SOCIALSTREAMS_FIELD_MESSAGE_DESC" 
-	       readonly="true"
-	       size="80" />
     </fieldset>
     <fields name="request" addfieldpath="/administrator/components/com_visitmanager/models/fields">
 	<fieldset name="request">

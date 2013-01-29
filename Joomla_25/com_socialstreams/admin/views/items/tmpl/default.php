@@ -19,9 +19,9 @@ JLoader::import('components.com_socialstreams.helpers.socialstreams', JPATH_ADMI
             <button type="button" onclick="document.id('filter_search').value='';this.form.submit();"><?php echo JText::_('JSEARCH_FILTER_CLEAR'); ?></button>
         </div>
         <div class="filter-select fltrt">
-            <select name="filter_network" class="inputbox" onchange="this.form.submit()">
+            <select name="filter_account" class="inputbox" onchange="this.form.submit()">
                 <option value=""><?php echo JText::_('COM_SOCIALSTREAMS_SELECT_NETWORK'); ?></option>
-                <?php echo JHtml::_('select.options', SocialStreamsHelper::getNetworks(), 'value', 'text', $this->state->get('filter.network'), true); ?>
+                <?php echo JHtml::_('select.options', SocialStreamsHelper::getAuthenticatedNetworks(), 'id', 'name', $this->state->get('filter.account'), true); ?>
             </select>
         </div>
     </fieldset>

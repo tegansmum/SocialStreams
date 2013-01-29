@@ -8,6 +8,7 @@
 
 .module.social-streams { 
     background-color: #fff;
+    overflow: hidden;
 }
 .module.social-streams .stream,
 .module.social-streams .social-metrics,
@@ -102,7 +103,7 @@
     float: left;
     margin-bottom: 4px;
     height: 32px;
-    width: 50%;
+/*    width: 50%;*/
 }
 .module.social-streams .social-metrics .social-metric .profile-link {
     display: block;

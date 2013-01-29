@@ -34,8 +34,8 @@ class SocialstreamsModelItems extends JModelList {
         $search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
         $this->setState('filter.search', $search);
 
-        $network = $app->getUserStateFromRequest($this->context . '.filter.network', 'filter_network');
-        $this->setState('filter.network', $network);
+        $network = $app->getUserStateFromRequest($this->context . '.filter.account', 'filter_account');
+        $this->setState('filter.account', $network);
 
 //        $language = $this->getUserStateFromRequest($this->context . '.filter.language', 'filter_language', '');
 //        $this->setState('filter.language', $language);
@@ -66,9 +66,9 @@ class SocialstreamsModelItems extends JModelList {
         $query->select('p.name AS name');
         $query->leftjoin('#__ss_profiles AS p ON p.id = i.profile_id');
 
-        if ($this->getState('filter.network')) {
-            $network = $this->getState('filter.network');
-            $query->where('i.network = "' . $network . '"');
+        if ($this->getState('filter.account')) {
+            $account = $this->getState('filter.account');
+            $query->where('i.client_id = ' . $account);
         }
 
         // Filter by search in title.

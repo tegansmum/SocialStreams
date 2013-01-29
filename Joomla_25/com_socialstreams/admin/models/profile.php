@@ -22,11 +22,23 @@ class SocialStreamsModelProfile extends JModelAdmin {
      *
      * @since   11.1
      */
-    public function save($data) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelProfile::save'));
-
+    public function save($clientid, $data) {
+        if(is_object($data)){
+            $store = array(
+                'id' => isset($data->id)? $data->id : '',
+                'network' => $data->network,
+                'networkid' => $data->networkid,
+                'user' => $data->user,
+                'name' => $data->name,
+                'image' => $data->image,
+                'url' => $data->url,
+                'profile' => $data->profile,
+                'expires' => $data->expires,
+                'created' => $data->created
+            );
+            $data = $store;
+        }
+        $data['client_id'] = $clientid;
         $table = $this->getTable();
         $key = $table->getKeyName();
         $pk = (!empty($data[$key])) ? $data[$key] : (int) $this->getState($this->getName() . '.id');
@@ -108,9 +120,6 @@ class SocialStreamsModelProfile extends JModelAdmin {
     }
 
     function refresh($force = false) {
-        jimport('joomla.error.log');
-        $errorLog = & JLog::getInstance();
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'SocialStreamsModelProfile::refresh'));
 
         JLoader::import('components.com_socialstreams.helpers.socialstreams', JPATH_ADMINISTRATOR);
         $new = 0;
@@ -120,37 +129,37 @@ class SocialStreamsModelProfile extends JModelAdmin {
         shuffle($networks);
         // Work through the networks looking for out of date profiles
         foreach ($networks as $network) {
-            $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($network, true)));
-            $fetch = false;
 
             // If there are no profiles for this network then it will need fetching
             $profile_ids = $this->getProfileIds($network['id']);
-            $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'All: ' . print_r($profile_ids, true)));
+
             // If profiles existed for this network, then look for out of date ones
             $expired_profile_ids = array();
             if (count($profile_ids) && !$force) {
                 $expired_profile_ids = $this->getProfileIds($network['id'], true);
-                $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'Expired: ' . print_r($expired_profile_ids, true)));
             }
+            // If we have no profiles, expired profiles or we are forcing then refresh the cache
             if (!count($profile_ids) || count($expired_profile_ids) || $force) {
 
                 if ($api = SocialStreamsHelper::getApi($network['network'], $network['clientid'])) {
-//                    $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => 'API -> ' . print_r($api, true)));
-                    if ($profile = $api->getProfile($network['clientid'])) {
-                        $save_item = $profile->store();
-                        $save_item['client_id'] = $network['id'];
-                        if (!$this->getInstance('profile', 'SocialStreamsModel')->save($save_item))
-                            JError::raiseWarning('500', 'Failed to Save Profile ' . $profile->name . ' for Client ID ' . $network['clientid'] . ' on Network ' . $network['network']);
-                    }
-                    if ($connections = $api->getConnectedProfiles($network['clientid'])) {
+                    $connection_count = 0;
+                    if ($connections = $api->getConnectedProfiles($connection_count)) {
                         $new = $new ? $new + count($connections) : count($connections);
                         foreach ($connections as $profile) {
-                            $save_item = $profile->store();
-                            $save_item['client_id'] = $network['id'];
-                            if (!$this->getInstance('profile', 'SocialStreamsModel')->save($save_item))
+//                            $save_item = $profile->store();
+//                            $save_item->client_id = $network['id'];
+                            if (!$this->getInstance('profile', 'SocialStreamsModel')->save($network['id'], $profile->store()))
                                 JError::raiseWarning('500', 'Failed to Save Profile ' . $profile->name . ' for Client ID ' . $network['clientid'] . ' on Network ' . $network['network']);
                         }
                     }
+                    
+                    if ($profile = $api->getProfile($network['clientid'])) {
+//                        $save_item = $profile->store($connection_count);
+//                        $save_item->client_id = $network['id'];
+                        if (!$this->getInstance('profile', 'SocialStreamsModel')->save($network['id'], $profile->store($connection_count)))
+                            JError::raiseWarning('500', 'Failed to Save Profile ' . $profile->name . ' for Client ID ' . $network['clientid'] . ' on Network ' . $network['network']);
+                    }
+                    
                     $this->clearExpired($network['network'], $network['id']);
                 }
                 if (!$force)

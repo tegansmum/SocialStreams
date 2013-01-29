@@ -31,7 +31,7 @@ class SocialStreamsControllerSocialStream extends JControllerForm {
             // Set the model
             $model = $this->getModel('SocialStream', '', array());
 
-            if (!$success = $model->setAuth($network)) {
+            if (!$success = $model->setAuth($network, $id)) {
                 $api = SocialStreamsHelper::getApi($network);
                 $message = 'Authenticate failed on Network ' . $network . ' : ' . $api->error;
                 $type = 'error';

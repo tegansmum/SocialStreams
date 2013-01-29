@@ -1,6 +1,4 @@
 <?php
-
-defined('_JEXEC') or die('Restricted access');
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -17,7 +15,7 @@ class linkedinHelper {
     public static $client;
     public static $server = 'LinkedIn';
     public static $redirect_uri = '';
-    public static $scope = 'r_fullprofile,r_network,rw_nus';
+    public static $scope = 'r_fullprofile r_network rw_nus';
     public static $last_error = '';
     public static $debug = 1;
 
@@ -25,9 +23,10 @@ class linkedinHelper {
         self::$client = new SocialStreamsLinkedin();
         self::$client->user = $userid;
         self::$client->debug = self::$debug;
+        self::$client->debug_http = self::$debug;
         self::$client->server = self::$server;
         self::$client->scope = self::$scope;
-        self::$client->redirect_uri = JURI::base() . 'index.php?option=com_socialstreams&task=socialstream.setauth&network=linkedin';
+        self::$client->redirect_uri = SocialStreamsHelper::getAuthRedirectUrl() . '&network=linkedin';
 
         if (strlen(SocialStreamsHelper::getParameter('linkedin_appkey')) == 0 || strlen(SocialStreamsHelper::getParameter('linkedin_appsecret')) == 0)
             return false;
@@ -72,7 +71,7 @@ class SocialStreamsLinkedin extends SocialStreamsApi {
         return false;
     }
 
-    public function getConnectedProfiles() {
+    public function getConnectedProfiles(&$connections_count) {
         $my_connections = array();
         if (strlen($this->access_token))
             $success = $this->CallAPI($this->api_url . 'people/id=' . $this->user . '/connections?format=json', 'GET', array(), array('FailOnAccessError' => true), $connections);
@@ -80,10 +79,10 @@ class SocialStreamsLinkedin extends SocialStreamsApi {
         $success = $this->Finalize($success);
         if ($success) {
             $show_friends = array();
-            $connections_total = $connections->_total;
+            $connections_count = $connections->_total;
             shuffle($connections->values);
             $stored_connections = SocialStreamsHelper::getParameter('stored_connections');
-            $stored_connections = $connections_total > $stored_connections ?
+            $stored_connections = $connections_count > $stored_connections ?
                     array_slice($connections->values, 0, $stored_connections) : $connections->values;
             foreach ($stored_connections as $connection){
                 if($connection->id == 'private')
@@ -126,19 +125,19 @@ class SocialStreamsLinkedin extends SocialStreamsApi {
         return false;
     }
 
-    public function getStats() {
-        if (strlen($this->access_token))
-            $success = self::CallAPI($this->api_url . 'people/id=' . $this->user . '/network/network-stats?format=json', 'GET', array(), array('FailOnAccessError' => true), $stats);
-        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($stats, true)));
-
-        $success = $this->Finalize($success);
-        if ($success) {
-
-            return $stats;
-        }
-
-        return false;
-    }
+//    public function getStats() {
+//        if (strlen($this->access_token))
+//            $success = self::CallAPI($this->api_url . 'people/id=' . $this->user . '/network/network-stats?format=json', 'GET', array(), array('FailOnAccessError' => true), $stats);
+//        $errorLog->addEntry(array('status' => 'DEBUG', 'comment' => print_r($stats, true)));
+//
+//        $success = $this->Finalize($success);
+//        if ($success) {
+//
+//            return $stats;
+//        }
+//
+//        return false;
+//    }
 
 }
 
@@ -152,21 +151,28 @@ class SocialStreamsLinkedinProfile extends SocialStreamsProfile {
         $this->nicename = 'LinkedIn';
         parent::__construct($wraptag);
     }
+    
+    public function getConnectVerb() {
+        return 'connect with';
+    }
 
-    public function setProfile($profile) {
+    public function setProfile($profile, $short = false) {
         $this->networkid = $profile->id;
         $this->user = isset($profile->id) ? $profile->id : '';
         $this->name = $profile->firstName . ' ' . $profile->lastName;
         $this->url = isset($profile->publicProfileUrl) ? $profile->publicProfileUrl : 'https://www.linkedin.com/';
         $this->image = isset($profile->pictureUrl) ? $profile->pictureUrl : 'http://s4.licdn.com/scds/common/u/img/icon/icon_no_photo_50x50.png';
+        if (!$short) {
         if (isset($profile->profile))
             $this->profile = json_decode($profile->profile);
         elseif (is_object($profile))
             $this->profile = $profile;
+        }
     }
 
-    public function store() {
-        return get_object_vars($this);
+    public function getStats() {
+        $connections = isset($this->profile->connections) ? $this->profile->connections : 0;
+        return array('name' => 'connections', 'count' => $connections);
     }
 
 }
@@ -178,6 +184,10 @@ class SocialStreamsLinkedinItem extends SocialStreamsItem {
         $this->nicename = 'LinkedIn';
         parent::__construct($wraptag);
     }
+    
+    public function getPromoteVerb() {
+        return 'like';
+    }
 
     function setUpdate($update) {
         $this->networkid = $update->updateKey;
@@ -187,26 +197,15 @@ class SocialStreamsLinkedinItem extends SocialStreamsItem {
             $this->item = json_decode($update->item);
             if (isset($update->profile)) {
                 $this->profile = new SocialStreamsLinkedinProfile();
-                $this->profile->setProfile($update->profile);
+                $this->profile->setProfile($update->profile, true);
             }
         } elseif (is_object($update)) {
             // Fresh Update from API
             $this->item = $update;
             $this->profile = new SocialStreamsLinkedinProfile();
-            $this->profile->setProfile(isset($update->profile) ? $update->profile : $update->updateContent->person);
+            $this->profile->setProfile(isset($update->profile) ? $update->profile : $update->updateContent->person, true);
         }
-        $this->published = JFactory::getDate(intval(substr($update->timestamp, 0, 10)))->toMySQL();
-    }
-
-    function store() {
-        $array = array(
-            'network' => $this->network,
-            'profile' => $this->profile,
-            'networkid' => $this->networkid,
-            'published' => $this->published,
-            'item' => $this->item
-        );
-        return $array;
+        $this->published = date('Y-m-d H:i:s', intval(substr($update->timestamp, 0, 10)));
     }
 
     function styleUpdate() {

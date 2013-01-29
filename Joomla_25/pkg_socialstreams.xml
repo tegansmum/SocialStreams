@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : pkg_socialstreams.xml
+    Created on : 21 January 2013, 11:24
+    Author     : stuart
+    Description:
+        Purpose of the document follows.
+-->
+
+<extension type="package" version="2.5.0">
+    <!-- Name of the Package -->
+    <name>Social Streams</name>
+    <!-- Name of the Author -->
+    <author>Appropriate Solutions</author>
+    <!-- Version Date of the Package -->
+    <creationDate>2013-01-21</creationDate>
+    <!-- Copyright information -->
+    <copyright>All rights reserved by Appropriate Solutions 2012.</copyright>
+    <!-- License Information -->
+    <license>GPL 2.0</license>
+    <!-- Author's email address -->
+    <authorEmail>mail@appropriatesolutions.co.uk</authorEmail>
+    <!-- Author's website -->
+    <url>http://www.appropriatesolutions.co.uk/</url>
+    <!-- Package Name -->
+    <packagename>socialstreams</packagename>
+    <packager>Appropriate Solutions</packager>
+    <packagerurl>http://www.appropriatesolutions.co.uk/</packagerurl>
+    <!-- Package version number -->
+    <version>0.1.2</version>
+    <!-- Description of what the module does -->
+    <description>Displays the cached Social Media activity from a number of Social Networks in one combined stream</description>
+    <!-- Listing of all files that should be installed for the Package -->
+    <files folder="packages">
+        <file type="component" id="socialstreams">com_socialstreams-v0.4.1.zip</file>
+        <file type="module" id="socialstreams">mod_socialstreams-v0.2.1.zip</file>
+    </files>
+</extension>

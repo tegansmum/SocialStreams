@@ -30,7 +30,6 @@ class SocialStreamsViewProfiles extends JView {
                 $ssprofile->setProfile($profile);
             $item->profile = $ssprofile;
         }
-        dump($this->items, 'Items');
 
         // Check for errors.
         if (count($errors = $this->get('Errors'))) {
